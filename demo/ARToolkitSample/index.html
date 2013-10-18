@@ -76,16 +76,6 @@ var onFailSoHard = function(e) {
     console.log('Error!', e);
 };
 
-/*
-//カメラ画像キャプチャ
-var snapshot = function() {
-    if (localMediaStream) {
-        ctx.drawImage(video, 0, 0);
-        var imageData = ctx.getImageData(0,0, width, height);
-    }
-};*/
-
-
 if (hasGetUserMedia()) {
     console.log("Camera OK");
 } else {
@@ -195,20 +185,15 @@ function initObjectScene() {
     markerRoot.matrixAutoUpdate = false;
     
     var loader = new THREE.ColladaLoader();
-	loader.load( './thymio.dae', function colladaReady( collada ) { //colladaファイルの読み込み
-	var object = collada.scene.getChildByName( 'Thymio', true ); //colladaシーン内のメッシュを取得
-	    object.flipSided = false; //メッシュの設定
-	    object.material.transparent = true; //マテリアルへのアクセス
+	loader.load( './thymio.dae', function colladaReady( collada ) { 
+	var object = collada.scene.getChildByName( 'Thymio', true ); 
+	    object.flipSided = false; 
+	    object.material.transparent = true;
 	    object.rotation.z = Math.PI;
 	    object.scale.set(1,1,1);
 	    
-	    markerRoot.add(collada.scene); //シーンへ追加
+	    markerRoot.add(collada.scene); 
     } );
-    
-    
-    //var cube = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), new THREE.MeshBasicMaterial({color: 0xff00ff}));
-    //cube.position.z = -50;
-    //markerRoot.add(cube);
     
     scene.add(markerRoot);
     console.log("success init ObjectScene");
@@ -287,18 +272,6 @@ window.onload = function() {
     loop();
 };
 
-/*
-//Button events
-$("#capture").click(function() {
-        snapshot();
-        });
-$("#stop").click(function() {
-        localMediaStream.stop();
-        });
-$("video").click(function() {
-        snapshot();
-        });
-*/
 </script>
 
 </html>
