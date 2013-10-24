@@ -119,31 +119,33 @@ THREE.Matrix4.prototype.setFromArray = function(m) {
 };
 
 //TODO: multiple mode
+var markers = {};
 function detect(mat) {
     var detectedMarkers = detector.detectMarkerLite(raster, threshold);
     
     var resultMat = new NyARTransMatResult();
-    var markers = {};
     for(var i=0; i<detectedMarkers; i++){
-        /*
+        
         var id = detector.getIdMarkerData(i);
         var currentId = -1;
         if(id.packetLength <= 4){
             currentId = 0;
-            for(int j=0; j<id.packetLength; j++){
+            /*for(var j=0; j<id.packetLength; j++){
                 currentId = (currentId << 8) | id.getPacketData(j);
-            }
+                console.log("id[" + j + "]=" + id.getPacketData(j));
+            }*/
         }
         
+        console.log("[add] : ID = " + currentId);
         if(markers[currentId] == null){
             markers[currentId] = {};
-        }*/
+        }
         
         detector.getTransformMatrix(i, resultMat);
         copyMarkerMatrix(resultMat, mat);
-//        markers[currentId].transform = Object.asCopy(mat);
-        markerRoot.matrix.setFromArray(mat);
-        markerRoot.matrixWorldNeedsUpdate = true;
+        markers[currentId].age = 0;
+        markers[currentId].transform = Object.asCopy(mat);
+        
     }
 }
 
@@ -192,7 +194,7 @@ function initObjectScene() {
 	    object.rotation.z = Math.PI;
 	    object.scale.set(1,1,1);
 	    
-	    markerRoot.add(collada.scene); 
+	    markerRoot.add(object); 
     } );
     
     scene.add(markerRoot);
@@ -225,6 +227,22 @@ function initVideoScene() {
     console.log("success init videoScene");
 }
 
+var maxAge = 5;
+function updateTransform(){
+    for(var i in markers){
+        var r = markers[i];
+        if(r.age > maxAge) delete markers[i];
+        r.age++;
+    }
+
+    var thymio = markerRoot.children;
+    for(var i in thymio) thymio[i].visible = false;
+    if(markers[0] != null){
+        for(var i in thymio) thymio[i].visible = true;
+        markerRoot.matrix.setFromArray(markers[0].transform);
+        markerRoot.matrixWorldNeedsUpdate = true;
+    }
+}
 
 //Main loop
 function loop(){
@@ -237,6 +255,7 @@ function loop(){
     canvas.changed = true;
     var detectedArray = new Float32Array(16);
     detect(detectedArray);
+    updateTransform();
     
     //Render the scene
     renderer.autoClear = false;
