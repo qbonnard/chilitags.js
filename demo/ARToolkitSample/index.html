@@ -46,7 +46,7 @@
             margin:0;
             padding:0;
         }
-        #renderer {
+        .fullscreen {
             position:absolute;
             width:100%;
             height:100%;
@@ -57,11 +57,11 @@
 </head>
 
 <body>
-    <video id="webcam" style="display:none;" autoplay width="640" height="480"></video>
+    <video id="webcam" class="fullscreen" style="display:none;" autoplay ></video>
     <!-- <canvas id="debugCanvas" width="640" height="480"></canvas> -->
-    <canvas id="videoCanvas" style="display:none;" width="640" height="480"></canvas>
-    <canvas id="dataCanvas" style="display:none;" width="640" height="480"></canvas>
-    <div id="renderer"></div>
+    <canvas id="videoCanvas" class="fullscreen" style="display:none;" ></canvas>
+    <canvas id="dataCanvas" class="fullscreen" style="display:none;" ></canvas>
+    <div id="renderer" class="fullscreen"></div>
 </body>
 
 <script>
@@ -74,6 +74,19 @@ var ctx = canvas.getContext('2d');
 var width = canvas.width;
 var height = canvas.height;
 var localMediaStream = null;
+
+function expandCanvas(){
+    var b = document.body;
+    var d = document.documentElement;
+    canvas.height = Math.max(b.clientHeight , b.scrollHeight, d.scrollHeight, d.clientHeight);
+    canvas.width = canvas.height * 3 / 2;
+    videoCanvas.width = canvas.width;
+    videoCanvas.height = canvas.height;
+    width = canvas.width;
+    height = canvas.height;
+}
+
+expandCanvas();
 
 //Checking if webcam is available
 var hasGetUserMedia = function() {
@@ -140,10 +153,10 @@ function detect(mat) {
         var currentId = -1;
         if(id.packetLength <= 4){
             currentId = 0;
-            /*for(var j=0; j<id.packetLength; j++){
-                currentId = (currentId << 8) | id.getPacketData(j);
-                console.log("id[" + j + "]=" + id.getPacketData(j));
-            }*/
+            // for(var j=0; j<id.packetLength; j++){
+            //     currentId = (currentId << 8) | id.getPacketData(j);
+            //     console.log("id[" + j + "]=" + id.getPacketData(j));
+            // }
         }
         
         console.log("[add] : ID = " + currentId);
@@ -166,6 +179,9 @@ function initThreeJs() {
     var rendererHeight = height;
     renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(rendererWidth, rendererHeight);
+    renderer.domElement.style.position = "absolute";
+    renderer.domElement.style.left = "50%";
+    renderer.domElement.style.marginLeft = (-width/2) + "px";
     document.getElementById('renderer').appendChild(renderer.domElement);
     renderer.setClearColor(new THREE.Color(0x444444), 1.0);
 }
