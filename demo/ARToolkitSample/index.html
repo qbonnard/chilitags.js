@@ -53,6 +53,19 @@
             left:0%;
             top:0%;
         }
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100px;
+            text-align: center;
+            z-index: 100;
+            display:block;
+            color: #ffffff;
+            text-shadow: 0px -1px 0px #000000,
+               1px  0px 0px #000000,
+               0px  1px 0px #000000,
+              -1px  0px 0px #000000;
+        }
     </style>
 </head>
 
@@ -62,6 +75,7 @@
     <canvas id="videoCanvas" class="fullscreen" style="display:none;" ></canvas>
     <canvas id="dataCanvas" class="fullscreen" style="display:none;" ></canvas>
     <div id="renderer" class="fullscreen"></div>
+    <div id="info">Description</div>
 </body>
 
 <script>
@@ -74,6 +88,8 @@ var ctx = canvas.getContext('2d');
 var width = canvas.width;
 var height = canvas.height;
 var localMediaStream = null;
+
+var info = document.getElementById('info');
 
 function expandCanvas(){
     var b = document.body;
@@ -141,6 +157,14 @@ THREE.Matrix4.prototype.setFromArray = function(m) {
     );
 };
 
+var projector = new THREE.Projector();
+function toCanvasXYCoords(pos, cam) {
+    var vector = projector.projectVector(pos.clone(), cam);
+    vector.x = (vector.x + 1)/2 * width + ((window.innerWidth - width)/2);
+    vector.y = -(vector.y - 1)/2 * height;
+    return vector;
+}
+
 //TODO: multiple mode
 var markers = {};
 function detect(mat) {
@@ -190,6 +214,7 @@ function initThreeJs() {
 var scene;
 var camera;
 var markerRoot;
+var thymio;
 function initObjectScene() {
     scene = new THREE.Scene();
     camera = new THREE.Camera();
@@ -202,10 +227,10 @@ function initObjectScene() {
     
     //Light setting
     light = new THREE.DirectionalLight(0xFFFFFF, 1.0, 0);
-    light.position.set( 100, 100, 200 );
+    light.position.set( 200, 100, 200 );
     scene.add(light);
 
-    light_ambient = new THREE.AmbientLight(0x444444);
+    light_ambient = new THREE.AmbientLight(0xFFFFFF);
     scene.add(light_ambient);
     
     //Initialize object
@@ -214,13 +239,13 @@ function initObjectScene() {
     
     var loader = new THREE.ColladaLoader();
 	loader.load( './thymio.dae', function colladaReady( collada ) { 
-	var object = collada.scene.getChildByName( 'Thymio', true ); 
-	    object.flipSided = false; 
-	    object.material.transparent = true;
-	    object.rotation.z = Math.PI;
-	    object.scale.set(1,1,1);
+	thymio = collada.scene.getChildByName( 'Thymio', true ); 
+	    thymio.flipSided = false; 
+	    thymio.material.transparent = true;
+	    thymio.rotation.z = Math.PI;
+	    thymio.scale.set(1,1,1);
 	    
-	    markerRoot.add(object); 
+	    markerRoot.add(collada.scene); 
     } );
     
     scene.add(markerRoot);
@@ -261,13 +286,18 @@ function updateTransform(){
         r.age++;
     }
 
-    var thymio = markerRoot.children;
-    for(var i in thymio) thymio[i].visible = false;
+    for(var i in thymio) thymio.visible = false;
     if(markers[0] != null){
-        for(var i in thymio) thymio[i].visible = true;
+        for(var i in thymio) thymio.visible = true;
         markerRoot.matrix.setFromArray(markers[0].transform);
         markerRoot.matrixWorldNeedsUpdate = true;
     }
+    camera.updateMatrixWorld();
+    var pos = new THREE.Vector3();
+    var vec = toCanvasXYCoords(pos.getPositionFromMatrix(markerRoot.matrixWorld), camera);
+    console.log("(" + vec.x + "," + vec.y + "," + vec.z + ")");
+    info.style.left = (vec.x - 50) + 'px';
+    info.style.top = (vec.y -100) + 'px';
 }
 
 //Main loop
