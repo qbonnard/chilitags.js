@@ -75,7 +75,7 @@
     <canvas id="videoCanvas" class="fullscreen" style="display:none;" ></canvas>
     <canvas id="dataCanvas" class="fullscreen" style="display:none;" ></canvas>
     <div id="renderer" class="fullscreen"></div>
-    <div id="info">Description</div>
+    <div id="info"></div>
 </body>
 
 <script>
@@ -90,6 +90,8 @@ var height = canvas.height;
 var localMediaStream = null;
 
 var info = document.getElementById('info');
+var textNode = document.createTextNode('');
+info.appendChild(textNode);
 
 function expandCanvas(){
     var b = document.body;
@@ -298,6 +300,8 @@ function updateTransform(){
     console.log("(" + vec.x + "," + vec.y + "," + vec.z + ")");
     info.style.left = (vec.x - 50) + 'px';
     info.style.top = (vec.y -100) + 'px';
+    var text = '(' + vec.x.toFixed(1) + ', ' + vec.y.toFixed(1) + ')';
+    textNode.nodeValue = text;
 }
 
 //Main loop
