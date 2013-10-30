@@ -71,15 +71,15 @@
 
 <body>
     <video id="webcam" class="fullscreen" style="display:none;" autoplay ></video>
-    <!-- <canvas id="debugCanvas" width="640" height="480"></canvas> -->
     <canvas id="videoCanvas" class="fullscreen" style="display:none;" ></canvas>
-    <canvas id="dataCanvas" class="fullscreen" style="display:none;" ></canvas>
-    <div id="renderer" class="fullscreen"></div>
+    <canvas id="dataCanvas" class="fullscreen"  style="display:none;" ></canvas>
+    <div id="renderer" class="fullscreen" ></div>
     <div id="info"></div>
+    <canvas id="debugCanvas" width="640" height="480"></canvas>
 </body>
 
 <script>
-// DEBUG = true;
+DEBUG = true;
 var video = document.getElementById('webcam');
 var videoCanvas = document.getElementById('videoCanvas');
 var canvas = document.getElementById('dataCanvas');
@@ -179,10 +179,10 @@ function detect(mat) {
         var currentId = -1;
         if(id.packetLength <= 4){
             currentId = 0;
-            // for(var j=0; j<id.packetLength; j++){
-            //     currentId = (currentId << 8) | id.getPacketData(j);
-            //     console.log("id[" + j + "]=" + id.getPacketData(j));
-            // }
+            for(var j=0; j<id.packetLength; j++){
+                currentId = (currentId << 8) | id.getPacketData(j);
+                console.log("id[" + j + "]=" + id.getPacketData(j));
+            }
         }
         
         console.log("[add] : ID = " + currentId);
@@ -251,7 +251,7 @@ function initObjectScene() {
     } );
     
     scene.add(markerRoot);
-    console.log("success init ObjectScene");
+    // console.log("success init ObjectScene");
 }
 
 //Setup videoTexture
@@ -277,10 +277,11 @@ function initVideoScene() {
     
     videoScene.add(plane);
     videoScene.add(videoCam);
-    console.log("success init videoScene");
+    // console.log("success init videoScene");
 }
 
 var maxAge = 5;
+var cubes = {};
 function updateTransform(){
     for(var i in markers){
         var r = markers[i];
@@ -288,18 +289,36 @@ function updateTransform(){
         r.age++;
     }
 
+    for(var i in cubes) cubes[i].children[0].visible = false;
+    for(var i in markers){
+        if(i != 64){
+            if(!cubes[i]){
+                var root = new THREE.Object3D();
+                root.matrixAutoUpdate = false;
+                var c = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), new THREE.MeshBasicMaterial({color: 0x444444}));
+                c.position.z = -50;
+                root.add(c);
+                scene.add(root);
+                cubes[i] = root;
+            }
+            cubes[i].matrix.setFromArray(markers[i].transform);
+            cubes[i].matrixWorldNeedsUpdate = true;
+            cubes[i].children[0].visible = true;
+        }
+    }
+
     for(var i in thymio) thymio.visible = false;
-    if(markers[0] != null){
+    if(markers[64] != null){
         for(var i in thymio) thymio.visible = true;
-        markerRoot.matrix.setFromArray(markers[0].transform);
+        markerRoot.matrix.setFromArray(markers[64].transform);
         markerRoot.matrixWorldNeedsUpdate = true;
     }
     camera.updateMatrixWorld();
     var pos = new THREE.Vector3();
     var vec = toCanvasXYCoords(pos.getPositionFromMatrix(markerRoot.matrixWorld), camera);
-    console.log("(" + vec.x + "," + vec.y + "," + vec.z + ")");
+    // console.log("(" + vec.x + "," + vec.y + "," + vec.z + ")");
     info.style.left = (vec.x - 50) + 'px';
-    info.style.top = (vec.y -100) + 'px';
+    info.style.top = (vec.y - 100) + 'px';
     var text = '(' + vec.x.toFixed(1) + ', ' + vec.y.toFixed(1) + ')';
     textNode.nodeValue = text;
 }
@@ -328,7 +347,7 @@ function loop(){
 var raster;
 var param;
 var detector;
-var threshold = 128;
+var threshold = 140;
 window.onload = function() {
     //Initialize ARToolKit
     raster = new NyARRgbRaster_Canvas2D(canvas);
