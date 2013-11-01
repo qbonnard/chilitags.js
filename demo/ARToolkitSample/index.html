@@ -53,7 +53,7 @@
             left:0%;
             top:0%;
         }
-        #info {
+        .info {
             position: absolute;
             top: 10px;
             width: 100px;
@@ -74,7 +74,7 @@
     <canvas id="videoCanvas" class="fullscreen" style="display:none;" ></canvas>
     <canvas id="dataCanvas" class="fullscreen"  style="display:none;" ></canvas>
     <div id="renderer" class="fullscreen" ></div>
-    <div id="info"></div>
+    <div id="info" class="info"></div>
     <canvas id="debugCanvas" width="640" height="480"></canvas>
 </body>
 
@@ -282,20 +282,26 @@ function initVideoScene() {
 
 var maxAge = 5;
 var cubes = {};
+var infoTexts = {};
 function updateTransform(){
     for(var i in markers){
         var r = markers[i];
-        if(r.age > maxAge) delete markers[i];
+        if(r.age > maxAge){
+            delete markers[i];
+        }
         r.age++;
     }
 
+    camera.updateMatrixWorld();
+
     for(var i in cubes) cubes[i].children[0].visible = false;
+    for(var i in infoTexts) infoTexts[i].style.display = "none";
     for(var i in markers){
         if(i != 64){
             if(!cubes[i]){
                 var root = new THREE.Object3D();
                 root.matrixAutoUpdate = false;
-                var c = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), new THREE.MeshBasicMaterial({color: 0x444444}));
+                var c = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), new THREE.MeshBasicMaterial({color: 0x440044}));
                 c.position.z = -50;
                 root.add(c);
                 scene.add(root);
@@ -304,6 +310,22 @@ function updateTransform(){
             cubes[i].matrix.setFromArray(markers[i].transform);
             cubes[i].matrixWorldNeedsUpdate = true;
             cubes[i].children[0].visible = true;
+
+            if(!infoTexts[i]){
+                var textDiv = document.createElement('div');
+                textDiv.className = 'info';
+                var text = document.createTextNode('aaa');
+                textDiv.appendChild(text);
+                document.body.appendChild(textDiv);
+                infoTexts[i] = textDiv;
+            }
+            var p = new THREE.Vector3();
+            p = p.getPositionFromMatrix(cubes[i].matrixWorld);
+            var infoPos = toCanvasXYCoords(p, camera);
+            infoTexts[i].style.left = (infoPos.x - 50) + 'px';
+            infoTexts[i].style.top = (infoPos.y - 100) + 'px';
+            infoTexts[i].style.display = "block";
+            infoTexts[i].childNodes[0].nodeValue = '(' + p.x.toFixed(1) + ', ' + p.y.toFixed(1) + ', ' + p.z.toFixed(1) + ')';
         }
     }
 
@@ -313,13 +335,14 @@ function updateTransform(){
         markerRoot.matrix.setFromArray(markers[64].transform);
         markerRoot.matrixWorldNeedsUpdate = true;
     }
-    camera.updateMatrixWorld();
+
     var pos = new THREE.Vector3();
-    var vec = toCanvasXYCoords(pos.getPositionFromMatrix(markerRoot.matrixWorld), camera);
+    pos = pos.getPositionFromMatrix(markerRoot.matrixWorld);
+    var vec = toCanvasXYCoords(pos, camera);
     // console.log("(" + vec.x + "," + vec.y + "," + vec.z + ")");
     info.style.left = (vec.x - 50) + 'px';
     info.style.top = (vec.y - 100) + 'px';
-    var text = '(' + vec.x.toFixed(1) + ', ' + vec.y.toFixed(1) + ')';
+    var text = '(' + pos.x.toFixed(1) + ', ' + pos.y.toFixed(1) + ', ' + pos.z.toFixed(1) + ')';
     textNode.nodeValue = text;
 }
 
