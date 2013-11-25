@@ -20,50 +20,64 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <Chilitag.hpp>
-#include <DetectChilitags.hpp>
+#include <chilitags/Chilitag.hpp>
+#include <chilitags/DetectChilitags.hpp>
+#include <chilitags/Quad.hpp>
+
+const static cv::Scalar scColor(255, 0, 255);
+cv::Mat inputImage;
+chilitags::DetectChilitags detect(&inputImage);
 
 extern "C" {
-	//Detect all tags
-	void detectAllTags(uchar* ret)
-	{
-		cv::Mat inputImage(480, 640, CV_8U, ret);
-		chilitags::DetectChilitags detect(&inputImage);
-		detect.update();
-		std::cout << "Update!" << std::endl;
-		for(int tagId=0; tagId<1024; ++tagId){
-			chilitags::Chilitag tag(tagId, 0);
-			if(tag.isPresent()){
-				std::cout << tagId << std::endl;
-			}
-		}
-	}
+    //Detect all tags
+    void detectAllTags(uchar* ret)
+    {
+        cv::Mat inputImage(480, 640, CV_8U, ret);
+        chilitags::DetectChilitags detect(&inputImage);
+        detect.update();
+        std::cout << "Update!" << std::endl;
+        for(int tagId=0; tagId<1024; ++tagId){
+            chilitags::Chilitag tag(tagId, 0);
+            if(tag.isPresent()){
+                std::cout << tagId << std::endl;
+            }
+        }
+    }
 
-	//Detect the tag that has minimum ID
-	int detectTag(uchar* ret)
-	{
-		cv::Mat inputImage(480, 640, CV_8U, ret);
-		chilitags::DetectChilitags detect(&inputImage);
-		detect.update();
-		int num = 0;
-		for(int tagId=0; tagId<1024; ++tagId){
-			chilitags::Chilitag tag(tagId, 0);
-			if(tag.isPresent()){
-				num++;
-			}
-		}
-		return num;
-	}
-	
-	//Return same data of input image
-	void imageData(uchar* input, uchar* output) {
-		
-		cv::Mat image(480, 640, CV_8U, input);
-	    	cv::Point2i p1(120, 20);
-		cv::Point2i p2(120, 190);
-    		cv::line(image, p1, p2, cv::Scalar(255,0,255), 1);
-		output = image.clone().data;
-		std::cout << input[0] << ", " << output[0] << std::endl;
-	}
+    //Detect the tag that has minimum ID
+    int detectTag(uchar* ret)
+    {
+        inputImage = cv::Mat(480, 640, CV_8U, ret);
+        detect.update();
+        int num = 0;
+        for(int tagId=0; tagId<1024; ++tagId){
+            chilitags::Chilitag tag(tagId, 0);
+            if(tag.isPresent()){
+                num++;
+                chilitags::Quad tCorners = tag.getCorners();
+                // We start by drawing this quadrilateral
+                for (size_t i = 0; i < chilitags::Quad::scNPoints; ++i) {
+                    cv::line(
+                        inputImage,
+                        tCorners[i],
+                        tCorners[(i+1)%4],
+                        scColor, 2);
+                }
+
+            }
+        }
+        return num;
+    }
+    
+    //Return same data of input image
+    void imageData(uchar* input, uchar* output) {
+        
+        cv::Mat image(480, 640, CV_8U, input);
+            cv::Point2i p1(120, 20);
+        cv::Point2i p2(120, 190);
+            cv::line(image, p1, p2, cv::Scalar(255,0,255), 1);
+        output = image.clone().data;
+        std::cout << input[0] << ", " << output[0] << std::endl;
+    }
 
 }
