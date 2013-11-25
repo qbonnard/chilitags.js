@@ -1,19 +1,19 @@
-###  chilitags.js
+#  chilitags.js
 ----------------
 ##  How to build
-# Install Emscripten
+##3 Install Emscripten
 See [Download Emscripten](https://github.com/kripken/emscripten/wiki/Emscripten-SDK)
-# Build OpenCV
-+Build OpenCV with emscripten
+### Build OpenCV
+* Build OpenCV with emscripten
 ```
 cd build
 emconfigure cmake ..
 make -j4 
 ```
 
-+Install to `EMSCRIPTEN_ROOT/system`
+* Install to `EMSCRIPTEN_ROOT/system`
 
-# Build chilitags.js
+### Build chilitags.js
 
 ```
 cd ~
