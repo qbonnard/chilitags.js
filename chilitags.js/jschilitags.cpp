@@ -45,13 +45,14 @@ extern "C" {
 		cv::Mat inputImage(480, 640, CV_8U, ret);
 		chilitags::DetectChilitags detect(&inputImage);
 		detect.update();
+		int num = 0;
 		for(int tagId=0; tagId<1024; ++tagId){
 			chilitags::Chilitag tag(tagId, 0);
 			if(tag.isPresent()){
-				return tagId;
+				num++;
 			}
 		}
-		return -1;
+		return num;
 	}
 	
 	//Return same data of input image

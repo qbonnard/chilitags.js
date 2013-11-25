@@ -1,27 +1,26 @@
 <!doctype html>
 <html>
 <head>
-	<script src="creator.js"></script>
-	<script src="jquery-1.10.2.min.js"></script>
+	<script src="chilitags.js"></script>
+	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 </head>
 
 <body> 
 <video autoplay width="640" height="480"></video>
-<img src="" width="640" height="480" >
-<canvas style="display:none;" width="640" height="480"></canvas>
+<canvas id="snapshot" width="640" height="480"></canvas>
 <div id="wrapper"> 
 <button id="capture">capture</button>
-<button id="stop">stop</button>
+<button id="continuous">continuous</button>
 </div>
 
 </body>
 <script>
 var video = document.querySelector('video');
-var canvas = document.querySelector('canvas');
+var canvas = document.getElementById('snapshot');
 var ctx = canvas.getContext('2d');
 var localMediaStream = null;
 
-
+var continuous = false;
 
 //Checking camera
 var hasGetUserMedia = function() {
@@ -33,27 +32,24 @@ var onFailSoHard = function(e) {
 	console.log('Error!', e);
 };
 
+var inputBuf = Module._malloc(video.width*video.height);
 //Camera capture
 var snapshot = function() {
 	if (localMediaStream) {
-		ctx.drawImage(video, 0, 0);
-		document.querySelector('img').src = canvas.toDataURL('image/webp');
+		ctx.drawImage(video, 0, 0, video.width, video.height);
 
 		var img = ctx.getImageData(0, 0, video.width, video.height);
 		var binary = new Uint8Array(img.data.length/4);
-		console.log(img.data.length);
 		for(var i=0; i<binary.length; i++){
 			binary[i] = Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255);
 		}
-		var inputBuf = Module._malloc(binary.length);
-		var outputBuf = Module._malloc(binary.length);
 		var start = new Date();
 		Module.HEAPU8.set(binary, inputBuf);
-		var retNum = Module.ccall('detectTag', 'number', ['number', 'number'], [inputBuf, outputBuf]);
+		var retNum = Module.ccall('detectTag', 'number', ['number'], [inputBuf]);
 		var end = new Date();
 		console.log((end.getTime() - start.getTime()) + "ms");
 		console.log("tag: " + retNum);
-		var outputImage = ctx.createImageData(video.width, video.height);
+		/*var outputImage = ctx.createImageData(video.width, video.height);
 		for(var i=0; i<video.width*video.height; i++){
 			var val = getValue(inputBuf+i,"i8");
 			if(val < 0) val += 255;
@@ -63,9 +59,8 @@ var snapshot = function() {
 			outputImage.data[4*i+3] = 255; 
 		}
 		ctx.putImageData(outputImage, 0, 0);
-		document.querySelector('img').src = canvas.toDataURL('image/webp');
-		Module._free(inputBuf);
-		Module._free(outputBuf);
+*/
+		if(continuous) requestAnimationFrame(snapshot);
 	}
 }
 
@@ -81,22 +76,17 @@ navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia
 navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
 navigator.getUserMedia({video: true}, function(stream) {
-
-
 		video.src = window.URL.createObjectURL(stream);
 		localMediaStream = stream;
-		var buf = Module._malloc(video.width*video.height);
-		Module.HEAPU8.set(stream, buf);
-		Module.ccall('createTag', 'number', ['number'], [buf]);
-		
 		}, onFailSoHard);
 
 //Button events
 $("#capture").click(function() {
 		snapshot();
 		});
-$("#stop").click(function() {
-		localMediaStream.stop();
+$("#continuous").click(function() {
+		continuous = true;
+		snapshot();
 		});
 $("video").click(function() {
 		snapshot();
