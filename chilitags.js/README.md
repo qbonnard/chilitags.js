@@ -10,6 +10,11 @@ emconfigure cmake ..
 make -j4 
 ```
 
+* Set `CMAKE_BUILD_TYPE=None`, `CMAKE_CXX_FLAGS="-O2 -DNDEBUG"`
+* Set `CMAKE_INSTALL_PREFIX=EMSCRIPTEN_ROOT/system`
+* It is recommended that all flags except `BUILD_SHARED_LIBS`, `BUILD_opencv_calib3d`, `BUILD_opencv_core`, `BUILD_opencv_features2d`, `BUILD_opencv_flann`, `BUILD_opencv_highgui`, `BUILD_opencv_imgproc`, `BUILD_opencv_ts`, `ENABLE_OMIT_FRAME_POINTER` are set to OFF.
+
+
 * Install to `EMSCRIPTEN_ROOT/system`
 
 ### Build chilitags.js
