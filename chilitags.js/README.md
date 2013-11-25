@@ -1,7 +1,6 @@
 #  chilitags.js
-----------------
 ##  How to build
-##3 Install Emscripten
+### Install Emscripten
 See [Download Emscripten](https://github.com/kripken/emscripten/wiki/Emscripten-SDK)
 ### Build OpenCV
 * Build OpenCV with emscripten
