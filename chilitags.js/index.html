@@ -67,7 +67,6 @@ var inputBuf = Module._malloc(video.width*video.height);
 var snapshot = function() {
 	if (localMediaStream) {
 		ctx.drawImage(video, 0, 0, video.width, video.height);
-
 		var img = ctx.getImageData(0, 0, video.width, video.height);
 		var binary = new Uint8Array(img.data.length/4);
 		for(var i=0; i<binary.length; i++){
@@ -107,10 +106,10 @@ navigator.mozGetUserMedia || navigator.msGetUserMedia;
 navigator.getUserMedia({video: true}, function(stream) {
 		video.src = window.URL.createObjectURL(stream);
 		localMediaStream = stream;
+		video.play();
 		}, onFailSoHard);
 
-window.onload = function() {
-	snapshot();
-}
+video.addEventListener('play', function() {setTimeout('snapshot()', 1000);}, false);
+
 </script>
 </html>
