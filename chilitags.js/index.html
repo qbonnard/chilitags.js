@@ -10,20 +10,31 @@
 		}
 		.fullscreen {
 			position:absolute;
-			width:100%;
+			width:auto;
 			height:100%;
-			padding:0;
-			margin:0;
-			left:0%;
-			top:0%;
 		}
+		.info {
+			position: absolute;
+             		top: 10px;
+             		width: 300px;
+             		text-align: center;
+             		z-index: 100;
+             		display:block;
+			font-size:x-large;
+             		color: #ffffff;
+             		text-shadow: 0px -1px 0px #000000,
+                		     1px  0px 0px #000000,
+               			     0px  1px 0px #000000,
+               			     -1px  0px 0px #000000;
+         	}
 	</style>
 
 </head>
 
 <body> 
-<video id="webcam" class="fullscreen" autoplay  width="640" height="480"></video>
+<video id="webcam" autoplay style="display:none;" width="640" height="480"></video>
 <canvas id="snapshot" class="fullscreen" width="640" height="480"></canvas>
+<div id="fps" class="info"></div>
 
 </body>
 <script>
@@ -37,6 +48,9 @@ var continuous = true;
 var width = canvas.width;
 var height = canvas.height;
 
+var fps = document.getElementById('fps');
+var fpsText = document.createTextNode('');
+fps.appendChild(fpsText);
 
 //Checking camera
 var hasGetUserMedia = function() {
@@ -63,8 +77,8 @@ var snapshot = function() {
 		Module.HEAPU8.set(binary, inputBuf);
 		var retNum = Module.ccall('detectTag', 'number', ['number', 'number', 'number'], [inputBuf, width, height]);
 		var end = new Date();
-		console.log((end.getTime() - start.getTime()) + "ms");
-		console.log("tag: " + retNum);
+		fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms";
+		//console.log("tag: " + retNum);
 		var outputImage = ctx.createImageData(video.width, video.height);
 		for(var i=0; i<video.width*video.height; i++){
 			var val = getValue(inputBuf+i,"i8");

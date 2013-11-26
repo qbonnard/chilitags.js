@@ -61,7 +61,7 @@ extern "C" {
                         inputImage,
                         tCorners[i],
                         tCorners[(i+1)%4],
-                        scColor, 2);
+                        scColor, 4);
                 }
 
             }
