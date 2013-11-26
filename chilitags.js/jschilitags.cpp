@@ -30,9 +30,9 @@ chilitags::DetectChilitags detect(&inputImage);
 
 extern "C" {
     //Detect all tags
-    void detectAllTags(uchar* ret)
+    void detectAllTags(uchar* ret, int width, int height)
     {
-        cv::Mat inputImage(480, 640, CV_8U, ret);
+        cv::Mat inputImage(height, width, CV_8U, ret);
         chilitags::DetectChilitags detect(&inputImage);
         detect.update();
         std::cout << "Update!" << std::endl;
@@ -45,9 +45,9 @@ extern "C" {
     }
 
     //Detect the tag that has minimum ID
-    int detectTag(uchar* ret)
+    int detectTag(uchar* ret, int width, int height)
     {
-        inputImage = cv::Mat(480, 640, CV_8U, ret);
+        inputImage = cv::Mat(height, width, CV_8U, ret);
         detect.update();
         int num = 0;
         for(int tagId=0; tagId<1024; ++tagId){
