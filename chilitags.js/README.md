@@ -39,7 +39,7 @@ Then:
 $ git clone https://github.com/chili-epfl/AR.js.git
 $ cd AR.js/chilitags.js
 $ mkdir build-emcc && cd build-emcc
-$ em++ -O2 -s OUTLINING_LIMIT=40000 ../jschilitags.cpp -lchilitags.so -lopencv_core -lopencv_imgproc -o chilitags.js -s EXPORTED_FUNCTIONS="['_detectAllTags', '_detectTag', '_imageData']"
+$ em++ -O2 -s OUTLINING_LIMIT=40000 ../jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -o chilitags.js -s EXPORTED_FUNCTIONS="['_detectAllTags', '_detectTag', '_imageData']"
 ```
 
 
