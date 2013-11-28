@@ -16,8 +16,8 @@
 		.info {
 			position: absolute;
              		top: 10px;
-             		width: 300px;
-             		text-align: center;
+             		width: 1000px;
+             		text-align: left;
              		z-index: 100;
              		display:block;
 			font-size:x-large;
@@ -63,6 +63,7 @@ var onFailSoHard = function(e) {
 };
 
 var inputBuf = Module._malloc(video.width*video.height);
+var outputBuf = Module._malloc(1024);
 //Camera capture
 var snapshot = function() {
 	if (localMediaStream) {
@@ -74,10 +75,15 @@ var snapshot = function() {
 		}
 		var start = new Date();
 		Module.HEAPU8.set(binary, inputBuf);
-		var retNum = Module.ccall('detectTag', 'number', ['number', 'number', 'number'], [inputBuf, width, height]);
+		//var retNum = Module.ccall('detectTag', 'number', ['number', 'number', 'number'], [inputBuf, width, height]);
+        var tagNum = Module.ccall('detectTag', 'number', ['number', 'number', 'number', 'number'], [inputBuf, width, height, outputBuf]);
 		var end = new Date();
-		fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms";
-		//console.log("tag: " + retNum);
+        var str = 'tag: ';
+        for(var i=0; i<tagNum; i++) {
+            str += getValue(outputBuf+i, "i8") + ', ';
+        }
+		fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
+		//console.log("tag: " + tagNum);
 		var outputImage = ctx.createImageData(video.width, video.height);
 		for(var i=0; i<video.width*video.height; i++){
 			var val = getValue(inputBuf+i,"i8");
