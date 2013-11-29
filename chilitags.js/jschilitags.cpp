@@ -37,7 +37,7 @@ extern "C" {
         detect.update();
         std::cout << "Update!" << std::endl;
         for(int tagId=0; tagId<1024; ++tagId){
-            chilitags::Chilitag tag(tagId, 0);
+            chilitags::Chilitag tag(tagId);
             if(tag.isPresent()){
                 std::cout << tagId << std::endl;
             }
@@ -45,14 +45,16 @@ extern "C" {
     }
 
     //Detect the tag that has minimum ID
-    int detectTag(uchar* ret, int width, int height)
+    int detectTag(uchar* input, int width, int height, uchar* tagList)
     {
-        inputImage = cv::Mat(height, width, CV_8U, ret);
+        inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
         int num = 0;
         for(int tagId=0; tagId<1024; ++tagId){
-            chilitags::Chilitag tag(tagId, 0);
+            chilitags::Chilitag tag(tagId);
             if(tag.isPresent()){
+                *tagList = tagId;
+                tagList++;
                 num++;
                 chilitags::Quad tCorners = tag.getCorners();
                 // We start by drawing this quadrilateral
@@ -70,14 +72,14 @@ extern "C" {
     }
     
     //Return same data of input image
-    void imageData(uchar* input, uchar* output) {
-        
-        cv::Mat image(480, 640, CV_8U, input);
-            cv::Point2i p1(120, 20);
+    uchar* imageData(uchar* input, int width, int height) {
+        cv::Mat image(height, width, CV_8U, input);
+        cv::Point2i p1(120, 20);
         cv::Point2i p2(120, 190);
-            cv::line(image, p1, p2, cv::Scalar(255,0,255), 1);
-        output = image.clone().data;
+        cv::line(image, p1, p2, cv::Scalar(255,0,255), 1);
+        uchar* output = image.clone().data;
         std::cout << input[0] << ", " << output[0] << std::endl;
+        return output;
     }
 
 }
