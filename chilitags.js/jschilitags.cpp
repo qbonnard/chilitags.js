@@ -29,23 +29,8 @@ cv::Mat inputImage;
 chilitags::DetectChilitags detect(&inputImage);
 
 extern "C" {
-    //Detect all tags
-    void detectAllTags(uchar* ret, int width, int height)
-    {
-        cv::Mat inputImage(height, width, CV_8U, ret);
-        chilitags::DetectChilitags detect(&inputImage);
-        detect.update();
-        std::cout << "Update!" << std::endl;
-        for(int tagId=0; tagId<1024; ++tagId){
-            chilitags::Chilitag tag(tagId);
-            if(tag.isPresent()){
-                std::cout << tagId << std::endl;
-            }
-        }
-    }
-
-    //Detect the tag that has minimum ID
-    int detectTag(uchar* input, int width, int height, uchar* tagList)
+    //Detect the tags and return the number of tags
+    int detectTag(uchar* input, int width, int height, int* tagList)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
@@ -65,21 +50,35 @@ extern "C" {
                         tCorners[(i+1)%4],
                         scColor, 4);
                 }
-
             }
         }
         return num;
     }
-    
-    //Return same data of input image
-    uchar* imageData(uchar* input, int width, int height) {
-        cv::Mat image(height, width, CV_8U, input);
-        cv::Point2i p1(120, 20);
-        cv::Point2i p2(120, 190);
-        cv::line(image, p1, p2, cv::Scalar(255,0,255), 1);
-        uchar* output = image.clone().data;
-        std::cout << input[0] << ", " << output[0] << std::endl;
-        return output;
-    }
 
+    //Return 3D positions of tags
+    int get3dPosition(uchar* input, int width, int height, float* output)
+    {
+        inputImage = cv::Mat(height, width, CV_8U, input);
+        detect.update();
+        int num = 0;
+        for(int tagId=0; tagId<1024; ++tagId){
+            chilitags::Chilitag tag(tagId);
+            if(tag.isPresent()){
+                num++;
+                chilitags::Quad tCorners = tag.getCorners();
+                // We start by drawing this quadrilateral
+                for (size_t i = 0; i < chilitags::Quad::scNPoints; ++i) {
+                    cv::line(
+                        inputImage,
+                        tCorners[i],
+                        tCorners[(i+1)%4],
+                        scColor, 4);
+                }
+                *output = tCorners[0];
+                output++;
+            }
+        }
+        return num;
+
+    }
 }
