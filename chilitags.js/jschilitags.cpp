@@ -17,16 +17,21 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <map>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include <chilitags/Chilitag.hpp>
 #include <chilitags/DetectChilitags.hpp>
 #include <chilitags/Quad.hpp>
+#include <chilitags/Objects.hpp>
 
 const static cv::Scalar scColor(255, 0, 255);
+const static cv::Mat cameraMatrix = (cv::Mat_<double>(3,3) << 5.2042395975892214e+02, 0., 3.2259445099873381e+02, 0., 4.8554104316510291e+02, 2.3588522427939671e+02, 0., 0., 1.);
+const static cv::Mat distCoeffs = (cv::Mat_<double>(5, 1) << -1.6021517508242436e-01, 6.1537421631596201e-01, -2.2085672036127502e-03, 2.6041952525647509e-03, -7.2585518912880542e-01);
 cv::Mat inputImage;
 chilitags::DetectChilitags detect(&inputImage);
+chilitags::Objects objects(cameraMatrix, distCoeffs, 27);
 
 extern "C" {
     //Detect the tags and return the number of tags
@@ -61,24 +66,9 @@ extern "C" {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
         int num = 0;
-        for(int tagId=0; tagId<1024; ++tagId){
-            chilitags::Chilitag tag(tagId);
-            if(tag.isPresent()){
-                num++;
-                chilitags::Quad tCorners = tag.getCorners();
-                // We start by drawing this quadrilateral
-                for (size_t i = 0; i < chilitags::Quad::scNPoints; ++i) {
-                    cv::line(
-                        inputImage,
-                        tCorners[i],
-                        tCorners[(i+1)%4],
-                        scColor, 4);
-                }
-                *output = tCorners[0];
-                output++;
-            }
+        for(auto& kv : objects.all()){
+            std::cout << kv.first << ": " << cv::Mat(kv.second) << std::endl;
         }
         return num;
-
     }
 }
