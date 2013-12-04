@@ -17,7 +17,9 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <sstream>
 #include <map>
+#include <string>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -61,14 +63,22 @@ extern "C" {
     }
 
     //Return 3D positions of tags
-    int get3dPosition(uchar* input, int width, int height, float* output)
+    int get3dPosition(uchar* input, int width, int height, char* output)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
         int num = 0;
+        std::ostringstream str;
+        str << "[ ";
         for(auto& kv : objects.all()){
-            std::cout << kv.first << ": " << cv::Mat(kv.second) << std::endl;
+            //std::cout << kv.first << ": " << cv::Mat(kv.second) << std::endl;
+            str << "{\"name\":\"" << kv.first << "\",";
+            str << "\"matrix\":" << cv::Mat(kv.second).reshape(1,1) << "},";
+            num++;
         }
+        std::string ret = str.str();
+        ret[ret.size()-1] = ']';
+        strcpy(output, ret.c_str());
         return num;
     }
 }
