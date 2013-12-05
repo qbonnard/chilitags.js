@@ -78,13 +78,11 @@ var snapshot = function() {
         var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number'], [inputBuf, width, height]);
 		var end = new Date();
         var str = 'tag: ';
-        console.log(output);
         var obj = JSON.parse(output);
         for(var tag in obj){
             str += tag + ", ";
         }
 		fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
-		//console.log("tag: " + tagNum);
 		var outputImage = ctx.createImageData(video.width, video.height);
 		for(var i=0; i<video.width*video.height; i++){
 			var val = getValue(inputBuf+i,"i8");
