@@ -1,4 +1,4 @@
-function get3dPositions (canvas) {
+function detect (canvas) {
     var inputBuf = Module._malloc(canvas.width*canvas.height);
     var img = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
     var binary = new Uint8Array(img.data.length/4);
@@ -10,5 +10,5 @@ function get3dPositions (canvas) {
     Module._free(inputBuf);
     return obj
 }
-Module['get3dPositions'] = get3dPositions;
+Module['detect'] = detect;
 this['Chilitags'] = Module;
