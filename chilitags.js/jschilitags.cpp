@@ -69,15 +69,23 @@ extern "C" {
         detect.update();
         int num = 0;
         std::ostringstream str;
-        str << "[ ";
+        str.setf(std::ios::fixed, std::ios::floatfield);
+        str.precision(4);
+        str << "{ ";
         for(auto& kv : objects.all()){
             //std::cout << kv.first << ": " << cv::Mat(kv.second) << std::endl;
-            str << "{\"name\":\"" << kv.first << "\",";
-            str << "\"matrix\":" << cv::Mat(kv.second).reshape(1,1) << "},";
+            str << "\"" << kv.first << "\":[";
+            for(int i=0; i<4; i++){
+                for(int j=0; j<4; j++){
+                    str << kv.second(i, j);
+                    if(i != 3 || j != 3) str << ",";
+                }
+            }
+            str << "],";
             num++;
         }
         std::string ret = str.str();
-        ret[ret.size()-1] = ']';
+        ret[ret.size()-1] = '}';
         strcpy(output, ret.c_str());
         return num;
     }

@@ -80,8 +80,8 @@ var snapshot = function() {
 		var end = new Date();
         var str = 'tag: ';
         var obj = JSON.parse(Pointer_stringify(outputBuf));
-        for(var i=0; i<obj.length; i++){
-            str += obj[i].name + ", ";
+        for(var tag in obj){
+            str += tag + ", ";
         }
 		fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
 		//console.log("tag: " + tagNum);
