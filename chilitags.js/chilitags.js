@@ -7694,7 +7694,7 @@ function detect (canvas) {
     for(var i=0; i<binary.length; i++){
         setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
     }
-    var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number'], [inputBuf, width, height]);
+    var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number'], [inputBuf, canvas.width, canvas.height]);
     var obj = JSON.parse(output);
     Module._free(inputBuf);
     return obj
