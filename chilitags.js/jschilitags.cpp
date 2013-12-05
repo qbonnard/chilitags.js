@@ -63,7 +63,7 @@ extern "C" {
     }
 
     //Return 3D positions of tags
-    int get3dPosition(uchar* input, int width, int height, char* output)
+    char* get3dPosition(uchar* input, int width, int height)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
@@ -86,7 +86,8 @@ extern "C" {
         }
         std::string ret = str.str();
         ret[ret.size()-1] = '}';
+        char* output = (char*)malloc(sizeof(char) * (ret.length()+1));
         strcpy(output, ret.c_str());
-        return num;
+        return output;
     }
 }

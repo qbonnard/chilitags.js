@@ -64,7 +64,6 @@ var onFailSoHard = function(e) {
 };
 
 var inputBuf = Module._malloc(video.width*video.height);
-var outputBuf = Module._malloc(1024);
 //Camera capture
 var snapshot = function() {
 	if (localMediaStream) {
@@ -76,10 +75,11 @@ var snapshot = function() {
 		}
 		var start = new Date();
 		Module.HEAPU8.set(binary, inputBuf);
-        var tagNum = Module.ccall('get3dPosition', 'number', ['number', 'number', 'number', 'number'], [inputBuf, width, height, outputBuf]);
+        var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number'], [inputBuf, width, height]);
 		var end = new Date();
         var str = 'tag: ';
-        var obj = JSON.parse(Pointer_stringify(outputBuf));
+        console.log(output);
+        var obj = JSON.parse(output);
         for(var tag in obj){
             str += tag + ", ";
         }
