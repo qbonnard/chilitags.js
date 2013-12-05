@@ -63,28 +63,19 @@ var onFailSoHard = function(e) {
 	console.log('Error!', e);
 };
 
-var inputBuf = Module._malloc(video.width*video.height);
 //Camera capture
 var snapshot = function() {
 	if (localMediaStream) {
 		ctx.drawImage(video, 0, 0, video.width, video.height);
-		var img = ctx.getImageData(0, 0, video.width, video.height);
-		var binary = new Uint8Array(img.data.length/4);
-		for(var i=0; i<binary.length; i++){
-			binary[i] = Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255);
-		}
 		var start = new Date();
-		Module.HEAPU8.set(binary, inputBuf);
-        var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number'], [inputBuf, width, height]);
+        var obj = Chilitags.get3dPositions(canvas);
 		var end = new Date();
         var str = 'tag: ';
-        var obj = JSON.parse(output);
         for(var tag in obj){
             str += tag + ", ";
         }
 		fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
-		var outputImage = ctx.createImageData(video.width, video.height);
-		for(var i=0; i<video.width*video.height; i++){
+		/*for(var i=0; i<video.width*video.height; i++){
 			var val = getValue(inputBuf+i,"i8");
 			if(val < 0) val += 255;
 			outputImage.data[4*i] = val; 
@@ -92,7 +83,7 @@ var snapshot = function() {
 			outputImage.data[4*i+2] = val; 
 			outputImage.data[4*i+3] = 255; 
 		}
-		ctx.putImageData(outputImage, 0, 0);
+		ctx.putImageData(outputImage, 0, 0);*/
 	}
 	if(continuous) requestAnimationFrame(snapshot);
 }
