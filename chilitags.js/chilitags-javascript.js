@@ -1,3 +1,15 @@
+function getProjectionMatrix(width, height, near, far) {
+    var buf = Module._malloc(64);
+    buf = Module.ccall('getProjectionMatrix', 'number', ['number', 'number', 'number', 'number'], [width, height, near, far]);
+    var matrix = new Float32Array(16);
+    for(var i=0; i<matrix.length; i++){
+        matrix[i] = getValue(buf+4*i, "float");
+    }
+    Module._free(buf);
+    return matrix;
+}
+Module['getProjectionMatrix'] = getProjectionMatrix;
+
 function detect (canvas) {
     var inputBuf = Module._malloc(canvas.width*canvas.height);
     var img = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);

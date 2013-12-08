@@ -36,6 +36,31 @@ chilitags::DetectChilitags detect(&inputImage);
 chilitags::Objects objects(cameraMatrix, distCoeffs, 27);
 
 extern "C" {
+    //Return projrction matrix
+    float* getProjectionMatrix(float width, float height, float near, float far){
+        float* projection = (float*)malloc(sizeof(float)*16);
+        projection[0] = 2 * (float)cameraMatrix.at<double>(0, 0) / width;
+        projection[1] = 0;
+        projection[2] = 2 * (float)cameraMatrix.at<double>(0, 2) / width - 1;
+        projection[3] = 0;
+        projection[4] = 0;
+        projection[5] = -2 * (float)cameraMatrix.at<double>(1, 1) / height;
+        projection[6] = -2 * (float)cameraMatrix.at<double>(1, 2) / height + 1;
+        projection[7] = 0;
+        projection[8] = 0;
+        projection[9] = 0;
+        projection[10] = (far + near) / (far - near);
+        projection[11] = -2 * far * near / (far - near);
+        projection[12] = 0;
+        projection[13] = 0;
+        projection[14] = 1;
+        projection[15] = 0;
+        //for(int i=0; i<16; i++){
+        //    std::cout << projection[i] << std::endl;
+        //}
+        return projection;
+    }
+
     //Detect the tags and return the number of tags
     int detectTag(uchar* input, int width, int height, int* tagList)
     {
