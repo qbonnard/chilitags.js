@@ -17,8 +17,8 @@
         }
         .info {
             position: absolute;
-            top: 10px;
-            width: 1000px;
+            top: 30px;
+            width: 200px;
             text-align: left;
             z-index: 100;
             display:block;
@@ -117,8 +117,8 @@ THREE.Matrix4.prototype.setFromArray = function(m) {
 var projector = new THREE.Projector();
 function toCanvasXYCoords(pos, cam) {
     var vector = projector.projectVector(pos.clone(), cam);
-    vector.x = (vector.x + 1)/2 * width + ((window.innerWidth - width)/2);
-    vector.y = -(vector.y - 1)/2 * height;
+    vector.x = (vector.x + 1)/2 * renderer.domElement.clientWidth + ((window.innerWidth - renderer.domElement.clientWidth)/2);
+    vector.y = -(vector.y - 1)/2 * renderer.domElement.clientHeight;
     return vector;
 }
 
@@ -143,7 +143,6 @@ function initThreeJs() {
     renderer.setSize(rendererWidth, rendererHeight);
     renderer.domElement.style.position = "absolute";
     renderer.domElement.style.left = "50%";
-    renderer.domElement.style.marginLeft = (-width/2) + "px";
     renderer.domElement.style.width = "auto";
     renderer.domElement.style.height = "100%";
     document.getElementById('renderer').appendChild(renderer.domElement);
@@ -228,7 +227,7 @@ function updateTransform(){
             if(!cubes[i]){
                 var root = new THREE.Object3D();
                 root.matrixAutoUpdate = false;
-                var c = new THREE.Mesh(new THREE.CubeGeometry(27, 27, 27), new THREE.MeshBasicMaterial({color: 0x440044}));
+                var c = new THREE.Mesh(new THREE.CubeGeometry(27, 27, 27), new THREE.MeshBasicMaterial({color: 0x440044, opacity: 0.5, transparent: true}));
                 c.position.x = 13.5;
                 c.position.y = 13.5;
                 c.position.z = -13.5;
@@ -251,16 +250,17 @@ function updateTransform(){
             var p = new THREE.Vector3();
             p = p.getPositionFromMatrix(cubes[i].matrixWorld);
             var infoPos = toCanvasXYCoords(p, camera);
-            infoTexts[i].style.left = (infoPos.x - 50) + 'px';
+            infoTexts[i].style.left = infoPos.x + 'px';
             infoTexts[i].style.top = (infoPos.y - 100) + 'px';
             infoTexts[i].style.display = "block";
-            infoTexts[i].childNodes[0].nodeValue = '(' + p.x.toFixed(1) + ', ' + p.y.toFixed(1) + ', ' + p.z.toFixed(1) + ')';
+            infoTexts[i].childNodes[0].nodeValue = i;
         }
     }
 }
 
 //Main loop
 function loop(){
+    renderer.domElement.style.marginLeft = (-renderer.domElement.clientWidth/2) + "px";
     //Video scene
     videoCtx.drawImage(video, 0, 0, width, height);
     videoTexture.needsUpdate = true;

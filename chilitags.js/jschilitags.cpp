@@ -33,7 +33,7 @@ const static cv::Mat cameraMatrix = (cv::Mat_<double>(3,3) << 5.2042395975892214
 const static cv::Mat distCoeffs = (cv::Mat_<double>(5, 1) << -1.6021517508242436e-01, 6.1537421631596201e-01, -2.2085672036127502e-03, 2.6041952525647509e-03, -7.2585518912880542e-01);
 cv::Mat inputImage;
 chilitags::DetectChilitags detect(&inputImage);
-chilitags::Objects objects(cameraMatrix, distCoeffs, 27);
+chilitags::Objects objects(cameraMatrix, distCoeffs, 27, 1);
 
 extern "C" {
     //Return projrction matrix
