@@ -33,9 +33,9 @@
 </head>
 
 <body> 
-    <video id="webcam" autoplay style="display:none;" width="640" height="480"></video>
     <canvas id="videoCanvas"  width="640" height="480" style="display:none;"></canvas>
     <div id="renderer"></div>
+    <video id="webcam" autoplay style="display:none" width="640" height="480"></video>
     <div id="fps" class="info"></div>
 </body>
 <script>
@@ -63,37 +63,11 @@
         console.log('Error!', e);
     };
 
-    //Camera capture
-    var snapshot = function() {
-        if (localMediaStream) {
-            ctx.drawImage(video, 0, 0, video.width, video.height);
-            var start = new Date();
-            var obj = Chilitags.get3dPositions(canvas);
-            var end = new Date();
-            var str = 'tag: ';
-            for(var tag in obj){
-                str += tag + ", ";
-            }
-            fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
-            /*for(var i=0; i<video.width*video.height; i++){
-              var val = getValue(inputBuf+i,"i8");
-              if(val < 0) val += 255;
-              outputImage.data[4*i] = val; 
-              outputImage.data[4*i+1] = val; 
-              outputImage.data[4*i+2] = val; 
-              outputImage.data[4*i+3] = 255; 
-              }
-              ctx.putImageData(outputImage, 0, 0);*/
-        }
-        if(continuous) requestAnimationFrame(snapshot);
-    }
-
     if (hasGetUserMedia()) {
         console.log("Camera OK");
     } else {
         alert("Invalid!");
     }
-
 
     window.URL = window.URL || window.webkitURL;
     navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
@@ -124,7 +98,7 @@ function toCanvasXYCoords(pos, cam) {
 
 var markers = {};
 function detect() {
-    var obj = Chilitags.detect(videoCanvas);
+    var obj = Chilitags.detect(videoCanvas, false);
     for(var tag in obj){
         if(markers[tag] == null){
             markers[tag] = {};
@@ -145,6 +119,11 @@ function initThreeJs() {
     renderer.domElement.style.left = "50%";
     renderer.domElement.style.width = "auto";
     renderer.domElement.style.height = "100%";
+    video.style.position = "absolute";
+    video.style.left = "50%";
+    video.style.width = "auto";
+    video.style.height = "100%";
+
     document.getElementById('renderer').appendChild(renderer.domElement);
     renderer.setClearColor(new THREE.Color(0x444444), 1.0);
 }
@@ -261,6 +240,7 @@ function updateTransform(){
 //Main loop
 function loop(){
     renderer.domElement.style.marginLeft = (-renderer.domElement.clientWidth/2) + "px";
+    video.style.marginLeft = (-renderer.domElement.clientWidth/2) + "px";
     //Video scene
     videoCtx.drawImage(video, 0, 0, width, height);
     videoTexture.needsUpdate = true;

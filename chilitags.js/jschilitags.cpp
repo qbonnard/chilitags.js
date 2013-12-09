@@ -22,6 +22,7 @@
 #include <string>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <chilitags/Chilitag.hpp>
 #include <chilitags/DetectChilitags.hpp>
@@ -88,7 +89,7 @@ extern "C" {
     }
 
     //Return 3D positions of tags
-    char* get3dPosition(uchar* input, int width, int height)
+    char* get3dPosition(uchar* input, int width, int height, bool isDistorted)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
@@ -113,6 +114,21 @@ extern "C" {
         ret[ret.size()-1] = '}';
         char* output = (char*)malloc(sizeof(char) * (ret.length()+1));
         strcpy(output, ret.c_str());
+
+        //undistort
+        if(isDistorted){
+            cv::Mat originalImage = inputImage.clone();
+            undistort(originalImage, inputImage, cameraMatrix, distCoeffs);
+        }
         return output;
+    }
+    
+    void getUndistortedImage(uchar* input, int width, int height){
+        cv::Mat image(height, width, CV_8U, input);
+        cv::Mat originalImage = image.clone();
+        undistort(originalImage, image, cameraMatrix, distCoeffs);
+        cv::Point2i p1(120, 20);
+        cv::Point2i p2(120, 190);
+        cv::line(image, p1, p2, scColor, 3);
     }
 }
