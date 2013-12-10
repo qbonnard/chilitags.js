@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <map>
 #include <string>
 #include <opencv2/core/core.hpp>
@@ -30,13 +31,36 @@
 #include <chilitags/Objects.hpp>
 
 const static cv::Scalar scColor(255, 0, 255);
-const static cv::Mat cameraMatrix = (cv::Mat_<double>(3,3) << 5.2042395975892214e+02, 0., 3.2259445099873381e+02, 0., 4.8554104316510291e+02, 2.3588522427939671e+02, 0., 0., 1.);
+const static cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 5.2042395975892214e+02, 0., 3.2259445099873381e+02, 0., 4.8554104316510291e+02, 2.3588522427939671e+02, 0., 0., 1.);
 const static cv::Mat distCoeffs = (cv::Mat_<double>(5, 1) << -1.6021517508242436e-01, 6.1537421631596201e-01, -2.2085672036127502e-03, 2.6041952525647509e-03, -7.2585518912880542e-01);
 cv::Mat inputImage;
 chilitags::DetectChilitags detect(&inputImage);
 chilitags::Objects objects(cameraMatrix, distCoeffs, 27, 1);
 
 extern "C" {
+    //Set new camera configuration
+    //void setCameraConfiguration(){
+    //    std::ifstream ifs("cameraConfiguration");
+    //    std::string str, buf;
+    //    while(getline(ifs, buf)) {
+    //        str += buf;
+    //    }
+    //    std::cout << str << std::endl;
+
+    //    cv::Mat newCameraMatrix, newDistCoeffs;
+    //    std::cout << newCameraMatrix << std::endl;
+    //    std::cout << newDistCoeffs << std::endl;
+    //    objects.resetCalibration(newCameraMatrix, newDistCoeffs);
+    //}
+    
+    void setCameraConfiguration(double* cMatrix, double* dist){
+        cv::Mat newCameraMatrix(3, 3, CV_64F, cMatrix);
+        cv::Mat newDistCoeffs(5, 1, CV_64F, dist);
+        std::cout << newCameraMatrix << std::endl;
+        std::cout << newDistCoeffs << std::endl;
+        objects.resetCalibration(newCameraMatrix, newDistCoeffs);
+    }
+
     //Return projrction matrix
     float* getProjectionMatrix(float width, float height, float near, float far){
         float* projection = (float*)malloc(sizeof(float)*16);
@@ -121,14 +145,5 @@ extern "C" {
             undistort(originalImage, inputImage, cameraMatrix, distCoeffs);
         }
         return output;
-    }
-    
-    void getUndistortedImage(uchar* input, int width, int height){
-        cv::Mat image(height, width, CV_8U, input);
-        cv::Mat originalImage = image.clone();
-        undistort(originalImage, image, cameraMatrix, distCoeffs);
-        cv::Point2i p1(120, 20);
-        cv::Point2i p2(120, 190);
-        cv::line(image, p1, p2, scColor, 3);
     }
 }

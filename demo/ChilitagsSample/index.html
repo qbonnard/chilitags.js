@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <script src="chilitags.js"></script>
     <script src="three.min.js"></script>
+    <script src="xml2json.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <style type="text/css">
         body {
@@ -37,6 +38,7 @@
     <div id="renderer"></div>
     <video id="webcam" autoplay style="display:none" width="640" height="480"></video>
     <div id="fps" class="info"></div>
+    <input type="file" id="cameraConfiguration">
 </body>
 <script>
     var video = document.getElementById('webcam');
@@ -275,6 +277,12 @@ function init() {
     
     //animation
     loop();
+}
+window.onload = function() {
+    var fileInput = document.getElementById('cameraConfiguration');
+    fileInput.addEventListener('change', function(e) {
+        Chilitags.setNewCamera(e.target.files[0]);
+    }, false);
 }
     video.addEventListener('play', function() {setTimeout('init()', 2500);}, false);
 </script>

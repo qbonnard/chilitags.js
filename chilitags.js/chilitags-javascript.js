@@ -1,3 +1,30 @@
+function setNewCamera(file) {
+    //Module['cameraConfiguration'] = file;
+    //FS.mkdir('/data');
+    //FS.mount(MEMFS, {}, '/data');
+    //FS.syncfs(true, function(err) {
+    //    var ret = FS.findObject("/data");
+    //});
+    //Module.ccall('setCameraConfiguration', 'number', [], []);
+    //var ret = FS.findObject("/data");
+    //console.log("aaa");
+    var reader = new FileReader;
+    reader.readAsText(file);
+    reader.onload = function() {
+        var dpObj = new DOMParser();
+        var xmlObj = dpObj.parseFromString(reader.result, "text/xml");
+        console.log(xmlObj);
+        var converter = new X2JS();
+        var jsonObj = converter.xml2json(xmlObj);
+        console.log(jsonObj); 
+        //var camMatArray = JSON.parse('[' + jsonObj.opencv_storage.camera_matrix.data + ']');
+        console.log(jsonObj.opencv_storage.camera_matrix.data);
+        //var cameraMatrix = Module._malloc(16*8);
+        //var distCoeffs = Module._malloc(5*8);
+    }
+}
+Module['setNewCamera'] = setNewCamera;
+
 function getProjectionMatrix(width, height, near, far) {
     var buf = Module._malloc(64);
     buf = Module.ccall('getProjectionMatrix', 'number', ['number', 'number', 'number', 'number'], [width, height, near, far]);
