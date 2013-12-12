@@ -139,8 +139,7 @@ function initObjectScene() {
     camera = new THREE.Camera();
     
     //Camera setting
-    var tmp = new Float32Array(16);
-    tmp = Chilitags.getProjectionMatrix(videoCanvas.width, videoCanvas.height, 10, 1000);
+    var tmp = Chilitags.getProjectionMatrix(videoCanvas.width, videoCanvas.height, 10, 1000);
     camera.projectionMatrix.setFromArray(tmp);
     scene.add(camera);
     
@@ -281,8 +280,12 @@ function init() {
 window.onload = function() {
     var fileInput = document.getElementById('cameraConfiguration');
     fileInput.addEventListener('change', function(e) {
+        //console.log(camera.projectionMatrix);
         Chilitags.setNewCamera(e.target.files[0]);
-    }, false);
+        //var tmp = Chilitags.getProjectionMatrix(videoCanvas.width, videoCanvas.height, 10, 1000);
+        //camera.projectionMatrix.setFromArray(tmp);
+        //console.log(camera.projectionMatrix);
+   }, false);
 }
     video.addEventListener('play', function() {setTimeout('init()', 2500);}, false);
 </script>
