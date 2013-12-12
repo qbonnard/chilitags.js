@@ -282,9 +282,11 @@ window.onload = function() {
     fileInput.addEventListener('change', function(e) {
         //console.log(camera.projectionMatrix);
         Chilitags.setNewCamera(e.target.files[0]);
-        //var tmp = Chilitags.getProjectionMatrix(videoCanvas.width, videoCanvas.height, 10, 1000);
-        //camera.projectionMatrix.setFromArray(tmp);
-        //console.log(camera.projectionMatrix);
+        setTimeout(function(){
+            var tmp = Chilitags.getProjectionMatrix(videoCanvas.width, videoCanvas.height, 10, 1000);
+            camera.projectionMatrix.setFromArray(tmp);
+        }, 50);
+        //console.log(tmp);
    }, false);
 }
     video.addEventListener('play', function() {setTimeout('init()', 2500);}, false);
