@@ -13,14 +13,25 @@ function setNewCamera(file) {
     reader.onload = function() {
         var dpObj = new DOMParser();
         var xmlObj = dpObj.parseFromString(reader.result, "text/xml");
-        console.log(xmlObj);
         var converter = new X2JS();
         var jsonObj = converter.xml2json(xmlObj);
-        console.log(jsonObj); 
-        //var camMatArray = JSON.parse('[' + jsonObj.opencv_storage.camera_matrix.data + ']');
-        console.log(jsonObj.opencv_storage.camera_matrix.data);
-        //var cameraMatrix = Module._malloc(16*8);
-        //var distCoeffs = Module._malloc(5*8);
+        var cameraMatrixString = jsonObj.opencv_storage.camera_matrix.data;
+        cameraMatrixString = cameraMatrixString.replace(/\.\s+|\.$/g, ".0 ").replace(/^\s+|\n+|\s+$/g, "").replace(/\s+/g, ",");
+        var camMatArray = JSON.parse('[' + cameraMatrixString + ']');
+        var distCoeffsString = jsonObj.opencv_storage.distortion_coefficients.data;
+        distCoeffsString = distCoeffsString.replace(/\.\s+|\.$/g, ".0 ").replace(/^\s+|\n+|\s+$/g, "").replace(/\s+/g, ",");
+        var distCoeffsArray = JSON.parse('[' + distCoeffsString + ']');
+        var cameraMatrix = Module._malloc(9*8);
+        var distCoeffs = Module._malloc(5*8);
+        for(var i=0; i<camMatArray.length; i++){
+            setValue(cameraMatrix+i*8, camMatArray[i], "double");
+        }
+        for(var i=0; i<distCoeffsArray.length; i++){
+            setValue(distCoeffs+i*8, distCoeffsArray[i], "double");
+        }
+        Module.ccall('setCameraConfiguration', 'number', ['number', 'number'], [cameraMatrix, distCoeffs]);
+        Module._free(cameraMatrix);
+        Module._free(distCoeffs);
     }
 }
 Module['setNewCamera'] = setNewCamera;
