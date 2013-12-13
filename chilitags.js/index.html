@@ -67,22 +67,13 @@
         if (localMediaStream) {
             ctx.drawImage(video, 0, 0, video.width, video.height);
             var start = new Date();
-            var obj = Chilitags.detect(canvas);
+            var obj = Chilitags.findTagsOnImage(canvas, true);
             var end = new Date();
             var str = 'tag: ';
             for(var tag in obj){
                 str += tag + ", ";
             }
             fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
-            /*for(var i=0; i<video.width*video.height; i++){
-              var val = getValue(inputBuf+i,"i8");
-              if(val < 0) val += 255;
-              outputImage.data[4*i] = val; 
-              outputImage.data[4*i+1] = val; 
-              outputImage.data[4*i+2] = val; 
-              outputImage.data[4*i+3] = 255; 
-              }
-              ctx.putImageData(outputImage, 0, 0);*/
         }
         if(continuous) requestAnimationFrame(snapshot);
     }
