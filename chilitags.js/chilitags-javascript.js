@@ -1,13 +1,4 @@
 function setNewCamera(file) {
-    //Module['cameraConfiguration'] = file;
-    //FS.mkdir('/data');
-    //FS.mount(MEMFS, {}, '/data');
-    //FS.syncfs(true, function(err) {
-    //    var ret = FS.findObject("/data");
-    //});
-    //Module.ccall('setCameraConfiguration', 'number', [], []);
-    //var ret = FS.findObject("/data");
-    //console.log("aaa");
     var reader = new FileReader;
     reader.readAsText(file);
     reader.onload = function() {
@@ -48,25 +39,59 @@ function getProjectionMatrix(width, height, near, far) {
 }
 Module['getProjectionMatrix'] = getProjectionMatrix;
 
-function detect (canvas, isDistorted) {
+function findTagsOnImage (canvas, drawLine) {
+    var ctx = canvas.getContext('2d');
     var inputBuf = Module._malloc(canvas.width*canvas.height);
-    var img = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+    var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
     var binary = new Uint8Array(img.data.length/4);
     for(var i=0; i<binary.length; i++){
         setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
     }
-    var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number', 'number'], [inputBuf, canvas.width, canvas.height, isDistorted]);
+    var output = Module.ccall('findTagsOnImage', 'string', ['number', 'number', 'number'], [inputBuf, canvas.width, canvas.height]);
     var obj = JSON.parse(output);
-    var outputImage = canvas.getContext('2d').createImageData(canvas.width, canvas.height);
-    for(var i=0; i<canvas.width*canvas.height; i++){
-        var val = getValue(inputBuf+i, "i8");
-        if(val<0) val += 255;
-        outputImage.data[4*i] = val;
-        outputImage.data[4*i+1] = val;
-        outputImage.data[4*i+2] = val;
-        outputImage.data[4*i+3] = 255;
+
+    if(drawLine){
+        //Draw lines
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgb(255, 0, 192)';
+        for(tag in obj){
+            ctx.beginPath();
+            ctx.moveTo(obj[tag][0][0], obj[tag][0][1]);
+            ctx.lineTo(obj[tag][1][0], obj[tag][1][1]); 
+            ctx.lineTo(obj[tag][2][0], obj[tag][2][1]); 
+            ctx.lineTo(obj[tag][3][0], obj[tag][3][1]);
+            ctx.closePath();
+            ctx.stroke(); 
+        }
     }
-    canvas.getContext('2d').putImageData(outputImage, 0, 0);
+    Module._free(inputBuf);
+    return obj
+}
+Module['findTagsOnImage'] = findTagsOnImage;
+
+function detect (canvas, rectification) {
+    var ctx = canvas.getContext('2d');
+    var inputBuf = Module._malloc(canvas.width*canvas.height);
+    var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var binary = new Uint8Array(img.data.length/4);
+    for(var i=0; i<binary.length; i++){
+        setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
+    }
+    var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number', 'number'], [inputBuf, canvas.width, canvas.height, rectification]);
+    var obj = JSON.parse(output);
+
+    if(rectification){
+        var outputImage = ctx.createImageData(canvas.width, canvas.height);
+        for(var i=0; i<canvas.width*canvas.height; i++){
+            var val = getValue(inputBuf+i, "i8");
+            if(val<0) val += 255;
+            outputImage.data[4*i] = val;
+            outputImage.data[4*i+1] = val;
+            outputImage.data[4*i+2] = val;
+            outputImage.data[4*i+3] = 255;
+        }
+        ctx.putImageData(outputImage, 0, 0);
+    }
     Module._free(inputBuf);
     return obj
 }

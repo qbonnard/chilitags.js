@@ -88,34 +88,32 @@ extern "C" {
         return projection;
     }
 
-    //Detect the tags and return the number of tags
-    int detectTag(uchar* input, int width, int height, int* tagList)
+    //Detect the tags and return the list of tags
+    char* findTagsOnImage(uchar* input, int width, int height)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
         int num = 0;
+        std::ostringstream str;
+        str.setf(std::ios::fixed, std::ios::floatfield);
+        str.precision(4);
+        str << "{ ";
         for(int tagId=0; tagId<1024; ++tagId){
-            chilitags::Chilitag tag(tagId);
+            chilitags::Chilitag tag(tagId, 4);
             if(tag.isPresent()){
-                *tagList = tagId;
-                tagList++;
-                num++;
                 chilitags::Quad tCorners = tag.getCorners();
-                // We start by drawing this quadrilateral
-                for (size_t i = 0; i < chilitags::Quad::scNPoints; ++i) {
-                    cv::line(
-                        inputImage,
-                        tCorners[i],
-                        tCorners[(i+1)%4],
-                        scColor, 4);
-                }
+                str << "\"" << tagId << "\":[" << tCorners[0] << "," << tCorners[1] << "," << tCorners[2] << "," << tCorners[3] << "],";
             }
         }
-        return num;
+        std::string ret = str.str();
+        ret[ret.size()-1] = '}';
+        char* output = (char*)malloc(sizeof(char) * (ret.length()+1));
+        strcpy(output, ret.c_str());
+        return output;
     }
 
     //Return 3D positions of tags
-    char* get3dPosition(uchar* input, int width, int height, bool isDistorted)
+    char* get3dPosition(uchar* input, int width, int height, bool rectification)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
         detect.update();
@@ -142,7 +140,7 @@ extern "C" {
         strcpy(output, ret.c_str());
 
         //undistort
-        if(isDistorted){
+        if(rectification){
             cv::Mat originalImage = inputImage.clone();
             undistort(originalImage, inputImage, cameraMatrix, distCoeffs);
         }
