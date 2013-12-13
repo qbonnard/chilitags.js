@@ -39,6 +39,9 @@
     <video id="webcam" autoplay style="display:none" width="640" height="480"></video>
     <div id="fps" class="info"></div>
     <input type="file" id="cameraConfiguration">
+    <p>
+    <button onclick="changeRectify()">Rectify</button>
+    </p>
 </body>
 <script>
     var video = document.getElementById('webcam');
@@ -54,6 +57,13 @@
     var fps = document.getElementById('fps');
     var fpsText = document.createTextNode('');
     fps.appendChild(fpsText);
+
+    var rectify = false;
+
+    function changeRectify() {
+        if(rectify) rectify = false;
+        else rectify = true;
+    }    
 
     //Checking camera
     var hasGetUserMedia = function() {
@@ -100,7 +110,7 @@ function toCanvasXYCoords(pos, cam) {
 
 var markers = {};
 function detect() {
-    var obj = Chilitags.detect(videoCanvas, false);
+    var obj = Chilitags.detect(videoCanvas, rectify);
     for(var tag in obj){
         if(markers[tag] == null){
             markers[tag] = {};
