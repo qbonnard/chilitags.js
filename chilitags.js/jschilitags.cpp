@@ -32,37 +32,24 @@
 
 const static cv::Scalar scColor(255, 0, 255);
 cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 5.2042395975892214e+02, 0., 3.2259445099873381e+02, 0., 4.8554104316510291e+02, 2.3588522427939671e+02, 0., 0., 1.);
-//static cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 5.1394622507907854e+02, 0., 3.1923129728408713e+02, 0., 4.8895420803980170e+02, 2.4251843640433188e+02, 0., 0., 1.);
 cv::Mat distCoeffs = (cv::Mat_<double>(5, 1) << -1.6021517508242436e-01, 6.1537421631596201e-01, -2.2085672036127502e-03, 2.6041952525647509e-03, -7.2585518912880542e-01);
-//static cv::Mat distCoeffs = (cv::Mat_<double>(5, 1) << -2.2700248239458870e-01, 8.7404455160180472e-01, -1.2409830956048459e-02, 1.4698610234494540e-03, -1.0489578544038125e+00);
 cv::Mat inputImage;
 chilitags::DetectChilitags detect(&inputImage);
 chilitags::Objects objects(cameraMatrix, distCoeffs, 27, 1);
 
 extern "C" {
     //Set new camera configuration
-    //void setCameraConfiguration(){
-    //    std::ifstream ifs("cameraConfiguration");
-    //    std::string str, buf;
-    //    while(getline(ifs, buf)) {
-    //        str += buf;
-    //    }
-    //    std::cout << str << std::endl;
+    void setCameraConfiguration(const char* filename){
+        cv::Mat newCameraMatrix, newDistCoeffs;
+        cv::FileStorage fs(filename, cv::FileStorage::READ);
+        fs["camera_matrix"] >> newCameraMatrix;
+        fs["distortion_coefficients"] >> newDistCoeffs;
 
-    //    cv::Mat newCameraMatrix, newDistCoeffs;
-    //    std::cout << newCameraMatrix << std::endl;
-    //    std::cout << newDistCoeffs << std::endl;
-    //    objects.resetCalibration(newCameraMatrix, newDistCoeffs);
-    //}
-    
-    void setCameraConfiguration(double* cMatrix, double* dist){
-        cv::Mat newCameraMatrix(3, 3, CV_64F, cMatrix);
-        cv::Mat newDistCoeffs(5, 1, CV_64F, dist);
         cameraMatrix = newCameraMatrix.clone();
         distCoeffs = newDistCoeffs.clone();
         objects.resetCalibration(cameraMatrix, distCoeffs);
     }
-
+    
     //Return projrction matrix
     float* getProjectionMatrix(float width, float height, float near, float far){
         float* projection = (float*)malloc(sizeof(float)*16);
@@ -86,6 +73,12 @@ extern "C" {
         //    std::cout << projection[i] << std::endl;
         //}
         return projection;
+    }
+
+    //Set Marker config file
+    void setMarkerConfig(const char* filename){
+        std::string filenameString(filename);
+        objects = chilitags::Objects(cameraMatrix, distCoeffs, filenameString, 0, 1.0);
     }
 
     //Detect the tags and return the list of tags

@@ -1,28 +1,12 @@
+var cameraCalibrationFileNumber = 1;
 function setNewCamera(file) {
     var reader = new FileReader;
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
     reader.onload = function() {
-        var dpObj = new DOMParser();
-        var xmlObj = dpObj.parseFromString(reader.result, "text/xml");
-        var converter = new X2JS();
-        var jsonObj = converter.xml2json(xmlObj);
-        var cameraMatrixString = jsonObj.opencv_storage.camera_matrix.data;
-        cameraMatrixString = cameraMatrixString.replace(/\.\s+|\.$/g, ".0 ").replace(/^\s+|\n+|\s+$/g, "").replace(/\s+/g, ",");
-        var camMatArray = JSON.parse('[' + cameraMatrixString + ']');
-        var distCoeffsString = jsonObj.opencv_storage.distortion_coefficients.data;
-        distCoeffsString = distCoeffsString.replace(/\.\s+|\.$/g, ".0 ").replace(/^\s+|\n+|\s+$/g, "").replace(/\s+/g, ",");
-        var distCoeffsArray = JSON.parse('[' + distCoeffsString + ']');
-        var cameraMatrix = Module._malloc(9*8);
-        var distCoeffs = Module._malloc(5*8);
-        for(var i=0; i<camMatArray.length; i++){
-            setValue(cameraMatrix+i*8, camMatArray[i], "double");
-        }
-        for(var i=0; i<distCoeffsArray.length; i++){
-            setValue(distCoeffs+i*8, distCoeffsArray[i], "double");
-        }
-        Module.ccall('setCameraConfiguration', 'number', ['number', 'number'], [cameraMatrix, distCoeffs]);
-        Module._free(cameraMatrix);
-        Module._free(distCoeffs);
+        var fileName = 'cameraConfiguration' + cameraCalibrationFileNumber;
+        var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
+        cameraCalibrationFileNumber++;
+        Module.ccall('setCameraConfiguration', 'number', ['string'], [fileName]);
     }
 }
 Module['setNewCamera'] = setNewCamera;
@@ -38,6 +22,19 @@ function getProjectionMatrix(width, height, near, far) {
     return matrix;
 }
 Module['getProjectionMatrix'] = getProjectionMatrix;
+
+var markerConfigFileNumber = 1;
+function setMarkerConfig(file) {
+    var reader = new FileReader;
+    reader.readAsArrayBuffer(file);
+    reader.onload = function() {
+        var fileName = 'markerConfigration' + markerConfigFileNumber;
+        var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
+        markerConfigFileNumber++;
+        Module.ccall('setMarkerConfig', 'number', ['string'], [fileName]);
+    }
+}
+Module['setMarkerConfig'] = setMarkerConfig;
 
 function findTagsOnImage (canvas, drawLine) {
     var ctx = canvas.getContext('2d');
@@ -78,6 +75,7 @@ function detect (canvas, rectification) {
         setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
     }
     var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number', 'number'], [inputBuf, canvas.width, canvas.height, rectification]);
+    console.log(output);
     var obj = JSON.parse(output);
 
     if(rectification){
