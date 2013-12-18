@@ -1,4 +1,13 @@
-#  chilitags.js
+#  Chilitags.js
+Chilitags.js is a direct port of Chilitags ([https://github.com/chili-epfl/chilitags](https://github.com/chili-epfl/chilitags)) to JavaScript, using Emscripten.
+
+Chilitags.js were developed internally for projects of the [CHILI lab](http://chili.epfl.ch/) (Computer-Human Interaction in Learning and Instruction, formerly CRAFT).
+
+##  Content
+This release of Chilitags.js consists of two components:
+* the library itself.
+* the sample programs illustrating how to use the library.
+
 ##  How to build
 ### Install Emscripten
 See [Download Emscripten](https://github.com/kripken/emscripten/wiki/Emscripten-SDK)
@@ -39,6 +48,6 @@ Then:
 $ git clone https://github.com/chili-epfl/AR.js.git
 $ cd AR.js/chilitags.js
 $ mkdir build-emcc && cd build-emcc
-$ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -lopencv_calib3d -o chilitags.js -s EXPORTED_FUNCTIONS="['_detectTag', '_get3dPosition']" --post-js ../chilitags-javascript.js
+$ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -lopencv_calib3d -o chilitags.js -s EXPORTED_FUNCTIONS="['_setCameraConfiguration', '_getProjectionMatrix', '_setMarkerConfig', '_findTagsOnImage', '_get3dPosition']" --post-js ../chilitags-javascript.js
 ```
 

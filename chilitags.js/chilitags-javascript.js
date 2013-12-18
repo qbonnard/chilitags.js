@@ -1,3 +1,4 @@
+//Set new camera calibration
 var cameraCalibrationFileNumber = 1;
 function setNewCamera(file) {
     var reader = new FileReader;
@@ -11,6 +12,7 @@ function setNewCamera(file) {
 }
 Module['setNewCamera'] = setNewCamera;
 
+//Return projection matrix
 function getProjectionMatrix(width, height, near, far) {
     var buf = Module._malloc(64);
     buf = Module.ccall('getProjectionMatrix', 'number', ['number', 'number', 'number', 'number'], [width, height, near, far]);
@@ -23,6 +25,7 @@ function getProjectionMatrix(width, height, near, far) {
 }
 Module['getProjectionMatrix'] = getProjectionMatrix;
 
+//Set marker configuration
 var markerConfigFileNumber = 1;
 function setMarkerConfig(file) {
     var reader = new FileReader;
@@ -36,6 +39,7 @@ function setMarkerConfig(file) {
 }
 Module['setMarkerConfig'] = setMarkerConfig;
 
+//Detect tags on image and return JSON onject including pair of tag ID and its 2D position
 function findTagsOnImage (canvas, drawLine) {
     var ctx = canvas.getContext('2d');
     var inputBuf = Module._malloc(canvas.width*canvas.height);
@@ -66,6 +70,7 @@ function findTagsOnImage (canvas, drawLine) {
 }
 Module['findTagsOnImage'] = findTagsOnImage;
 
+//Detect tags and return JSON object including pairs of tag name and its transformation matrix
 function detect (canvas, rectification) {
     var ctx = canvas.getContext('2d');
     var inputBuf = Module._malloc(canvas.width*canvas.height);

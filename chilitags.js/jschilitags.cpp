@@ -39,7 +39,8 @@ chilitags::Objects objects(cameraMatrix, distCoeffs, 27, 1);
 
 extern "C" {
     //Set new camera configuration
-    void setCameraConfiguration(const char* filename){
+    void setCameraConfiguration(const char* filename)
+    {
         cv::Mat newCameraMatrix, newDistCoeffs;
         cv::FileStorage fs(filename, cv::FileStorage::READ);
         fs["camera_matrix"] >> newCameraMatrix;
@@ -51,7 +52,8 @@ extern "C" {
     }
     
     //Return projrction matrix
-    float* getProjectionMatrix(float width, float height, float near, float far){
+    float* getProjectionMatrix(float width, float height, float near, float far)
+    {
         float* projection = (float*)malloc(sizeof(float)*16);
         projection[0] = 2 * (float)cameraMatrix.at<double>(0, 0) / width;
         projection[1] = 0;
@@ -69,19 +71,18 @@ extern "C" {
         projection[13] = 0;
         projection[14] = 1;
         projection[15] = 0;
-        //for(int i=0; i<16; i++){
-        //    std::cout << projection[i] << std::endl;
-        //}
         return projection;
     }
 
     //Set Marker config file
-    void setMarkerConfig(const char* filename){
+    //TODO:It sometimes doesn't work properly (very unstable).
+    void setMarkerConfig(const char* filename)
+    {
         std::string filenameString(filename);
         objects = chilitags::Objects(cameraMatrix, distCoeffs, filenameString, 0, 1.0);
     }
 
-    //Detect the tags and return the list of tags
+    //Detect the tags on image and return the pair of tag ID and its 2D position.
     char* findTagsOnImage(uchar* input, int width, int height)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
@@ -105,7 +106,7 @@ extern "C" {
         return output;
     }
 
-    //Return 3D positions of tags
+    //Detect tags and return pairs of tag IDs and its transformation matrix
     char* get3dPosition(uchar* input, int width, int height, bool rectification)
     {
         inputImage = cv::Mat(height, width, CV_8U, input);
@@ -116,7 +117,6 @@ extern "C" {
         str.precision(4);
         str << "{ ";
         for(auto& kv : objects.all()){
-            //std::cout << kv.first << ": " << cv::Mat(kv.second) << std::endl;
             str << "\"" << kv.first << "\":[";
             for(int i=0; i<4; i++){
                 for(int j=0; j<4; j++){
@@ -132,7 +132,7 @@ extern "C" {
         char* output = (char*)malloc(sizeof(char) * (ret.length()+1));
         strcpy(output, ret.c_str());
 
-        //undistort
+        //undistortion of image
         if(rectification){
             cv::Mat originalImage = inputImage.clone();
             undistort(originalImage, inputImage, cameraMatrix, distCoeffs);
