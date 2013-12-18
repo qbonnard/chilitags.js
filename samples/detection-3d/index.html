@@ -109,7 +109,7 @@ function toCanvasXYCoords(pos, cam) {
 
 var markers = {};
 function detect() {
-    var obj = Chilitags.detect(videoCanvas, rectify);
+    var obj = Chilitags.get3dPose(videoCanvas, rectify);
     for(var tag in obj){
         if(markers[tag] == null){
             markers[tag] = {};

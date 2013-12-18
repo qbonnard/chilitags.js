@@ -71,7 +71,7 @@ function findTagsOnImage (canvas, drawLine) {
 Module['findTagsOnImage'] = findTagsOnImage;
 
 //Detect tags and return JSON object including pairs of tag name and its transformation matrix
-function detect (canvas, rectification) {
+function get3dPose (canvas, rectification) {
     var ctx = canvas.getContext('2d');
     var inputBuf = Module._malloc(canvas.width*canvas.height);
     var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -80,7 +80,6 @@ function detect (canvas, rectification) {
         setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
     }
     var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number', 'number'], [inputBuf, canvas.width, canvas.height, rectification]);
-    console.log(output);
     var obj = JSON.parse(output);
 
     if(rectification){
@@ -98,5 +97,5 @@ function detect (canvas, rectification) {
     Module._free(inputBuf);
     return obj
 }
-Module['detect'] = detect;
+Module['get3dPose'] = get3dPose;
 this['Chilitags'] = Module;

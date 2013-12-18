@@ -1,0 +1,1 @@
+em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 src/jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -lopencv_calib3d -o chilitags.js -s EXPORTED_FUNCTIONS="['_setCameraConfiguration', '_getProjectionMatrix', '_setMarkerConfig', '_findTagsOnImage', '_get3dPosition']" --post-js src/chilitags-javascript.js
