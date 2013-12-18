@@ -6,7 +6,7 @@ Chilitags.js were developed internally for projects of the [CHILI lab](http://ch
 ##  Content
 This release of Chilitags.js consists of two components:
 * the library itself.
-* the sample programs illustrating how to use the library.
+* `samples`, the sample programs illustrating how to use the library.
 
 ##  How to build
 ### Install Emscripten
@@ -48,6 +48,36 @@ Then:
 $ git clone https://github.com/chili-epfl/AR.js.git
 $ cd AR.js/chilitags.js
 $ mkdir build-emcc && cd build-emcc
-$ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -lopencv_calib3d -o chilitags.js -s EXPORTED_FUNCTIONS="['_setCameraConfiguration', '_getProjectionMatrix', '_setMarkerConfig', '_findTagsOnImage', '_get3dPosition']" --post-js ../chilitags-javascript.js
+$ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../src/jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -lopencv_calib3d -o chilitags.js -s EXPORTED_FUNCTIONS="['_setCameraConfiguration', '_getProjectionMatrix', '_setMarkerConfig', '_findTagsOnImage', '_get3dPosition']" --post-js ../src/chilitags-javascript.js
 ```
+##  APIs
+### 2D detection
+#### Chilitags.findTagsOnImage(canvas, drawLine)
+* canvas: `object` (`<canvas>` element)
+* drawLine: `bool`
+Returns the object that includes pairs of tag ID and array of positions of its corners.
+
+### 3D detection
+#### Chilitags.detect(canvas, rectification)
+* canvas: `object` (`<canvas>` element)
+* rectification: `bool`
+Returns the object that includes pairs of tag name and its transformation matrix.
+
+#### Chilitags.getProjectionMatrix(width, height, near, far)
+* width: `float`
+* height: `float`
+* near: `float`
+* far: `float`
+Returns `Float32Array` (16 elements) of projection matrix of camera.
+
+### Camera calibration
+#### Chilitags.setNewCamera(file)
+* file: XML/YAML file in OpenCV format(See [Camera calibration With OpenCV](http://docs.opencv.org/doc/tutorials/calib3d/camera_calibration/camera_calibration.html))
+Set intrinsic parameters and distortion coefficients of camera.
+
+
+### Marker configuration
+#### Chilitags.setMarkerConfig(file)
+* file: YAML file (e.g. [chilitags/share/markers_configuration_sample.yml](https://github.com/chili-epfl/chilitags/blob/master/share/markers_configuration_sample.yml))
+Set marker configuration.
 
