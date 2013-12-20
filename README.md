@@ -84,6 +84,7 @@ for (var tagId in tags){
 }
 ```
 
+demo: [https://chili-research.epfl.ch/chilitags.js/samples/detection-2d/](https://chili-research.epfl.ch/chilitags.js/samples/detection-2d/)
 ### 3D detection
 #### Chilitags.get3dPose(canvas, rectification)
 * canvas: `object` (`<canvas>` element)
@@ -106,6 +107,7 @@ for (var tagId in tags){
     console.log(str);
 }
 ```
+demo:[https://chili-research.epfl.ch/chilitags.js/samples/detection-3d/](https://chili-research.epfl.ch/chilitags.js/samples/detection-3d/)
 
 #### Chilitags.getProjectionMatrix(width, height, near, far)
 * width: `float`
