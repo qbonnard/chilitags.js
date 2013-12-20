@@ -59,8 +59,8 @@ $ make -j4 && make install
 
 Then:
 ```
-$ git clone https://github.com/chili-epfl/AR.js.git
-$ cd AR.js/chilitags.js
+$ git clone https://github.com/chili-epfl/chilitags.js.git
+$ cd chilitags.js
 $ mkdir build-emcc && cd build-emcc
 $ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../src/jschilitags.cpp -lchilitags -lopencv_core -lopencv_imgproc -lopencv_calib3d -o chilitags.js -s EXPORTED_FUNCTIONS="['_setCameraConfiguration', '_getProjectionMatrix', '_setMarkerConfig', '_findTagsOnImage', '_get3dPosition']" --post-js ../src/chilitags-javascript.js
 ```
@@ -74,7 +74,7 @@ $ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../src/jschilitags.cpp -lchilitag
 Returns the object that includes pairs of tag ID and array of positions of its corners.
 
 example:
-```
+```JavaScript
 var canvas = document.getElementById('image');
 var tags = Chilitags.findTagsOnImage(canvas, true);
 
@@ -93,7 +93,7 @@ demo: [https://chili-research.epfl.ch/chilitags.js/samples/detection-2d/](https:
 Returns the object that includes pairs of tag name and its transformation matrix.
 
 example:
-```
+```JavaScript
 var canvas = document.getElementById('image');
 var tags = Chilitags.get3dPose(canvas, true);
 
@@ -118,7 +118,7 @@ demo:[https://chili-research.epfl.ch/chilitags.js/samples/detection-3d/](https:/
 Returns `Float32Array` (16 elements) of projection matrix of camera.
 
 example:
-```
+```JavaScript
 var projectionMatrix = Chilitags.getProjectionMatrix(960, 640, 1, 100);
 ```
 
@@ -129,7 +129,7 @@ var projectionMatrix = Chilitags.getProjectionMatrix(960, 640, 1, 100);
 Set intrinsic parameters and distortion coefficients of camera.
 
 example:
-```
+```JavaScript
 var file = document.getElementById('calibrationFile');
 file.addEventListener('change', function(e) {
     Chilitags.setNewCamera(e.target.files[0]);
@@ -143,7 +143,7 @@ file.addEventListener('change', function(e) {
 Set marker configuration.
 
 example:
-```
+```JavaScript
 var file = document.getElementById('markerConfigFile');
 file.addEventListener('change', function(e) {
     Chilitags.setMarkerConfig(e.target.files[0]);
