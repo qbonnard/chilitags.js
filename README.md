@@ -19,7 +19,11 @@ We assume hereafter that `emscripten` is installed in `$EMSCRIPTEN_ROOT` (and
 that `$EMSCRIPTEN_ROOT` is in your path, ie, you can call `emcc` and `em++`
 from anywhere).
 
-
+**NOTE**: Use Emscripten 1.5.9 until [issue 1886](https://github.com/kripken/emscripten/pull/1886) will be solved.
+```
+$ cd $EMSCRIPTEN_ROOT
+$ git checkout -b 1.5.9 1.5.9
+```
 
 ### Build OpenCV
 * Build OpenCV with emscripten
@@ -36,6 +40,11 @@ Then:
 ```
 $ make -j4 && make install
 ```
+
+As a result, OpenCV is compiled to the libarary which insludes LLVM bytecode with Clang, then put in the folder `$EMSCRIPTEN_ROOT/system/` to make it easy to link with this library.
+
+**NOTE**: Use OpenCV 2.4.8 or later, or build [soure code on github](https://github.com/Itseez/opencv) until 2.4.8 will be released.
+
 ### Build chilitags.js
 
 First install and compile `chilitags`:
@@ -64,12 +73,39 @@ $ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../src/jschilitags.cpp -lchilitag
 
 Returns the object that includes pairs of tag ID and array of positions of its corners.
 
+example:
+```
+var canvas = document.getElementById('image');
+var tags = Chilitags.findTagsOnImage(canvas, true);
+
+//tags -> {"tag ID": [[x0, y0],[x1, y1],[x2, y2],[x3, y3]], ...}
+for (var tagId in tags){
+    console.log('corner[0] of 'tagID + ' (x:' + tags[tagID][0][0] + ', y:' + tags[tagId][0][1] + ')');
+}
+```
+
 ### 3D detection
 #### Chilitags.get3dPose(canvas, rectification)
 * canvas: `object` (`<canvas>` element)
 * rectification: `bool`
 
 Returns the object that includes pairs of tag name and its transformation matrix.
+
+example:
+```
+var canvas = document.getElementById('image');
+var tags = Chilitags.get3dPose(canvas, true);
+
+//tags -> {"tag ID": [m11, m12, m13, m14, m21, ... m44], ...}
+for (var tagId in tags){
+    var str = 'transformation of 'tagID + ':[';
+    for(var i=0; i< tags[tagId].length(); i++){
+        str += tags[tagID][i] + ', ';
+    }
+    str += ']';
+    console.log(str);
+}
+```
 
 #### Chilitags.getProjectionMatrix(width, height, near, far)
 * width: `float`
@@ -79,16 +115,37 @@ Returns the object that includes pairs of tag name and its transformation matrix
 
 Returns `Float32Array` (16 elements) of projection matrix of camera.
 
+example:
+```
+var projectionMatrix = Chilitags.getProjectionMatrix(960, 640, 1, 100);
+```
+
 ### Camera calibration
 #### Chilitags.setNewCamera(file)
 * file: XML/YAML file in OpenCV format(See [Camera calibration With OpenCV](http://docs.opencv.org/doc/tutorials/calib3d/camera_calibration/camera_calibration.html))
 
 Set intrinsic parameters and distortion coefficients of camera.
 
+example:
+```
+var file = document.getElementById('calibrationFile');
+file.addEventListener('change', function(e) {
+    Chilitags.setNewCamera(e.target.files[0]);
+}, false);
+```
 
 ### Marker configuration
 #### Chilitags.setMarkerConfig(file)
 * file: YAML file (e.g. [chilitags/share/markers_configuration_sample.yml](https://github.com/chili-epfl/chilitags/blob/master/share/markers_configuration_sample.yml))
 
 Set marker configuration.
+
+example:
+```
+var file = document.getElementById('markerConfigFile');
+file.addEventListener('change', function(e) {
+    Chilitags.setMarkerConfig(e.target.files[0]);
+}, false);
+```
+
 
