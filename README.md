@@ -29,21 +29,22 @@ $ git checkout -b 1.5.9 1.5.9
 * Build OpenCV with emscripten
 ```
 $ cd build
-$ emconfigure cmake -DCMAKE_INSTALL_PREFIX=$EMSCRIPTEN_ROOT/system ..
+$ emconfigure cmake -DCMAKE_CXX_FLAGS="-O2 -DNDEBUG" -DCMAKE_INSTALL_PREFIX=$EMSCRIPTEN_ROOT/system ..
 ```
 
-* Set `CMAKE_BUILD_TYPE=None`, `CMAKE_CXX_FLAGS="-O2 -DNDEBUG"`
-* Set `CMAKE_INSTALL_PREFIX=EMSCRIPTEN_ROOT/system`
-* It is recommended that all flags except `BUILD_SHARED_LIBS`, `BUILD_opencv_calib3d`, `BUILD_opencv_core`, `BUILD_opencv_features2d`, `BUILD_opencv_flann`, `BUILD_opencv_highgui`, `BUILD_opencv_imgproc`, `BUILD_opencv_ts`, `ENABLE_OMIT_FRAME_POINTER` are set to OFF.
+* We recommend you to **turn off** all flags except `BUILD_SHARED_LIBS`, `BUILD_opencv_calib3d`, `BUILD_opencv_core`, `BUILD_opencv_features2d`, `BUILD_opencv_flann`, `BUILD_opencv_imgproc`, and `ENABLE_OMIT_FRAME_POINTER`.
 
 Then:
 ```
-$ make -j4 && make install
+$ make install
 ```
 
-As a result, OpenCV is compiled to the libarary which insludes LLVM bytecode with Clang, then put in the folder `$EMSCRIPTEN_ROOT/system/` to make it easy to link with this library.
+As a result, OpenCV is compiled by `clang` to libraries which includes LLVM
+bytecode only.  These libraries are installed to `$EMSCRIPTEN_ROOT/system/` to
+make it easy for other emscripten project to link with.
 
-**NOTE**: Use OpenCV 2.4.8 or later, or build [soure code on github](https://github.com/Itseez/opencv) until 2.4.8 will be released.
+**NOTE**: Use OpenCV 2.4.8 or later, or build [soure code on
+github](https://github.com/Itseez/opencv) until 2.4.8 will be released.
 
 ### Build chilitags.js
 
@@ -53,8 +54,8 @@ First install and compile `chilitags`:
 $ git clone https://github.com/chili-epfl/chilitags.git
 $ cd chilitags
 $ mkdir build-emcc && cd build-emcc
-$ emconfigure cmake -DCMAKE_INSTALL_PREFIX=$EMSCRIPTEN_ROOT/system ..
-$ make -j4 && make install
+$ emconfigure cmake -DCMAKE_CXX_FLAGS="-O2 -DNDEBUG" -DCMAKE_INSTALL_PREFIX=$EMSCRIPTEN_ROOT/system -DOpenCV_DIR=$EMSCRIPTEN_ROOT/system/share/OpenCV -DWITH_CREATOR=OFF -DWITH_DETECTOR=OFF ..
+$ make install
 ```
 
 Then:
