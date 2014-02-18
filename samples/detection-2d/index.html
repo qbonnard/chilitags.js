@@ -3,99 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <script src="../../chilitags.js"></script>
-    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <style type="text/css">
-        body {
-            margin:0;
-            padding:0;
-        }
-        .fullscreen {
-            position:absolute;
-            width:auto;
-            height:100%;
-        }
-        .info {
-            position: absolute;
-            top: 10px;
-            width: 1000px;
-            text-align: left;
-            z-index: 100;
-            display:block;
-            font-size:x-large;
-            color: #ffffff;
-            text-shadow: 0px -1px 0px #000000,
-                        1px  0px 0px #000000,
-                        0px  1px 0px #000000,
-                        -1px  0px 0px #000000;
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 
 <body> 
-<video id="webcam" autoplay style="display:none;" width="640" height="480"></video>
-<canvas id="snapshot" class="fullscreen" width="640" height="480"></canvas>
-<div id="fps" class="info"></div>
 
-</body>
-<script>
-    var video = document.getElementById('webcam');
-    var canvas = document.getElementById('snapshot');
-    var ctx = canvas.getContext('2d');
+    <video id="inputVideo" autoplay class="hidden" width="640" height="480"></video>
+    <canvas id="chilitagsCanvas" width="640" height="480"></canvas>
+
+    <script type="text/javascript">
+        var persistency = 5;
+        var gain = .5;
+        var drawBorders = true;
+    </script>
+    <table>
+        <tr>
+            <td>Persistency:</td>
+            <td><input type="number"
+                       value=5
+                       min=0
+                       onChange="persistency=this.value; Chilitags.setFilter(persistency, gain);">
+            </input></td>
+        </tr>
+        <tr>
+            <td>Gain (%):</td>
+            <td><input type="number"
+                       size=3 
+                       value=50
+                       min=0
+                       max=100
+                       onChange="gain=this.value/100; Chilitags.setFilter(persistency, gain);">
+            </input></td>
+        <tr>
+            <td>Processing time (ms):</td>
+            <td id="processingTime"></td>
+        </tr>
+        <tr>
+            <td>Draw Borders:</td>
+            <td><input type="checkbox"
+                       checked="true"
+                       onChange="drawBorders = this.checked;">
+            </input></td>
+        </tr>
+    </table>
+    <p>Detected tags (px)</p>
+    <table id="tagList"></table>
+
+    <script>
+
+    var video = document.getElementById('inputVideo');
+    var canvas = document.getElementById('chilitagsCanvas');
     var localMediaStream = null;
 
-    var continuous = true;
+    var processingTime = document.createTextNode('');
+    document.getElementById('processingTime').appendChild(processingTime);
+    var tagList = document.getElementById("tagList");
 
-    var width = canvas.width;
-    var height = canvas.height;
-
-    var fps = document.getElementById('fps');
-    var fpsText = document.createTextNode('');
-    fps.appendChild(fpsText);
-
-    //Checking camera
-    var hasGetUserMedia = function() {
-        return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-                navigator.mozGetUserMedia || navigator.msGetUserMedia);
-    }
-    //Error
-    var onFailSoHard = function(e) {
-        console.log('Error!', e);
-    };
-
-    //Camera capture
-    var snapshot = function() {
+    var updateChilitags = function() {
         if (localMediaStream) {
-            ctx.drawImage(video, 0, 0, video.width, video.height);
+            canvas.getContext('2d').drawImage(video, 0, 0, video.width, video.height);
             var start = new Date();
-            var obj = Chilitags.findTagsOnImage(canvas, true);
+            var tags = Chilitags.find(canvas, drawBorders);
             var end = new Date();
-            var str = 'tag: ';
-            for(var tag in obj){
-                str += tag + ", ";
+
+            processingTime.nodeValue = end.getTime() - start.getTime();
+
+            if(drawBorders){
+                //Draw lines
+                var ctx = canvas.getContext('2d');
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgb(255, 0, 192)';
+                for(tag in tags){
+                    ctx.beginPath();
+                    ctx.moveTo(tags[tag][0][0], tags[tag][0][1]);
+                    ctx.lineTo(tags[tag][1][0], tags[tag][1][1]); 
+                    ctx.lineTo(tags[tag][2][0], tags[tag][2][1]); 
+                    ctx.lineTo(tags[tag][3][0], tags[tag][3][1]);
+                    ctx.closePath();
+                    ctx.stroke(); 
+
+                    ctx.fillStyle = 'rgb(255, 0, 192)';
+                    ctx.font = "bold 16px Arial";
+                    ctx.fillText(
+                        tag,
+                        (tags[tag][0][0]+tags[tag][2][0])/2,
+                        (tags[tag][0][1]+tags[tag][2][1])/2);
+                }
             }
-            fpsText.nodeValue = "Chilitags processing = " + (end.getTime() - start.getTime()) + "ms  " + str;
+
+            tagList.innerHTML = '<tr><th>ID</th><td>Top Left Corner</td><td>Top Right Corner</td><td>Bottom Right Corner</td><td>Bottom Left Corner</td></tr>';
+            for(var tag in tags) {
+                var row = tagList.appendChild(document.createElement('tr'));
+                row.appendChild(document.createElement('th')).textContent = tag;
+                row.appendChild(document.createElement('td')).textContent = tags[tag][0];
+                row.appendChild(document.createElement('td')).textContent = tags[tag][1];
+                row.appendChild(document.createElement('td')).textContent = tags[tag][2];
+                row.appendChild(document.createElement('td')).textContent = tags[tag][3];
+
+            }
         }
-        if(continuous) requestAnimationFrame(snapshot);
+        requestAnimationFrame(updateChilitags);
     }
 
-    if (hasGetUserMedia()) {
-        console.log("Camera OK");
-    } else {
-        alert("Invalid!");
-    }
-
-
-    window.URL = window.URL || window.webkitURL;
     navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-    navigator.getUserMedia({video: true}, function(stream) {
-            video.src = window.URL.createObjectURL(stream);
-            localMediaStream = stream;
-            video.play();
-            }, onFailSoHard);
+    if (!!navigator.getUserMedia) {
+        console.log("Camera OK");
+        navigator.getUserMedia(
+            {video: true},
+            function(stream) {
+                window.URL = window.URL || window.webkitURL;
+                video.src = window.URL.createObjectURL(stream);
+                localMediaStream = stream;
+                video.play();
+            },
+            function(e) { console.log('Error in getUserMedia()', e); });
+        video.addEventListener('play', updateChilitags, false);
+    }
+    else alert("No getUserMedia");
 
-    video.addEventListener('play', function() {setTimeout('snapshot()', 2500);}, false);
 
-</script>
+    </script>
+
+</body>
 </html>

@@ -1,46 +1,9 @@
-//Set new camera calibration
-var cameraCalibrationFileNumber = 1;
-function setNewCamera(file) {
-    var reader = new FileReader;
-    reader.readAsArrayBuffer(file);
-    reader.onload = function() {
-        var fileName = 'cameraConfiguration' + cameraCalibrationFileNumber;
-        var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
-        cameraCalibrationFileNumber++;
-        Module.ccall('setCameraConfiguration', 'number', ['string'], [fileName]);
-    }
+function setFilter(persistence, gain) {
+    Module.ccall('setFilter', 'void', ['float', 'float'], [persistence, gain]);
 }
-Module['setNewCamera'] = setNewCamera;
+Module['setFilter'] = setFilter;
 
-//Return projection matrix
-function getProjectionMatrix(width, height, near, far) {
-    var buf = Module._malloc(64);
-    buf = Module.ccall('getProjectionMatrix', 'number', ['number', 'number', 'number', 'number'], [width, height, near, far]);
-    var matrix = new Float32Array(16);
-    for(var i=0; i<matrix.length; i++){
-        matrix[i] = getValue(buf+4*i, "float");
-    }
-    Module._free(buf);
-    return matrix;
-}
-Module['getProjectionMatrix'] = getProjectionMatrix;
-
-//Set marker configuration
-var markerConfigFileNumber = 1;
-function setMarkerConfig(file) {
-    var reader = new FileReader;
-    reader.readAsArrayBuffer(file);
-    reader.onload = function() {
-        var fileName = 'markerConfigration' + markerConfigFileNumber;
-        var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
-        markerConfigFileNumber++;
-        Module.ccall('setMarkerConfig', 'number', ['string'], [fileName]);
-    }
-}
-Module['setMarkerConfig'] = setMarkerConfig;
-
-//Detect tags on image and return JSON onject including pair of tag ID and its 2D position
-function findTagsOnImage (canvas, drawLine) {
+function find (canvas) {
     var ctx = canvas.getContext('2d');
     var inputBuf = Module._malloc(canvas.width*canvas.height);
     var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -48,30 +11,24 @@ function findTagsOnImage (canvas, drawLine) {
     for(var i=0; i<binary.length; i++){
         setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
     }
-    var output = Module.ccall('findTagsOnImage', 'string', ['number', 'number', 'number'], [inputBuf, canvas.width, canvas.height]);
-    var obj = JSON.parse(output);
-
-    if(drawLine){
-        //Draw lines
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = 'rgb(255, 0, 192)';
-        for(tag in obj){
-            ctx.beginPath();
-            ctx.moveTo(obj[tag][0][0], obj[tag][0][1]);
-            ctx.lineTo(obj[tag][1][0], obj[tag][1][1]); 
-            ctx.lineTo(obj[tag][2][0], obj[tag][2][1]); 
-            ctx.lineTo(obj[tag][3][0], obj[tag][3][1]);
-            ctx.closePath();
-            ctx.stroke(); 
-        }
-    }
+    var output = Module.ccall('find', 'string', ['int', 'int', 'int'], [inputBuf, canvas.width, canvas.height]);
     Module._free(inputBuf);
-    return obj
+    return JSON.parse(output);
 }
-Module['findTagsOnImage'] = findTagsOnImage;
+Module['find'] = find;
+
+function set2DFilter(persistence, gain) {
+    Module.ccall('set2DFilter', 'void', ['float', 'float'], [persistence, gain]);
+}
+Module['set2DFilter'] = set2DFilter;
+
+function set3DFilter(persistence, gain) {
+    Module.ccall('set3DFilter', 'void', ['float', 'float'], [persistence, gain]);
+}
+Module['set3DFilter'] = set3DFilter;
 
 //Detect tags and return JSON object including pairs of tag name and its transformation matrix
-function get3dPose (canvas, rectification) {
+function estimate (canvas, rectification) {
     var ctx = canvas.getContext('2d');
     var inputBuf = Module._malloc(canvas.width*canvas.height);
     var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -79,7 +36,7 @@ function get3dPose (canvas, rectification) {
     for(var i=0; i<binary.length; i++){
         setValue(inputBuf+i, Math.min(0.299 * img.data[4*i] + 0.587 * img.data[4*i+1] + 0.114 * img.data[4*i+2], 255), "i8");
     }
-    var output = Module.ccall('get3dPosition', 'string', ['number', 'number', 'number', 'number'], [inputBuf, canvas.width, canvas.height, rectification]);
+    var output = Module.ccall('estimate', 'string', ['int', 'int', 'int', 'boolean'], [inputBuf, canvas.width, canvas.height, rectification]);
     var obj = JSON.parse(output);
 
     if(rectification){
@@ -97,5 +54,65 @@ function get3dPose (canvas, rectification) {
     Module._free(inputBuf);
     return obj
 }
-Module['get3dPose'] = get3dPose;
+Module['estimate'] = estimate;
+
+//Set marker configuration
+var tagConfigFileNumber = 1;
+function readTagConfiguration(file, omitOtherTags) {
+    var reader = new FileReader;
+    reader.readAsArrayBuffer(file);
+    reader.onload = function() {
+        var fileName = 'markerConfigration' + tagConfigFileNumber;
+        var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
+        tagConfigFileNumber++;
+        Module.ccall('readTagConfiguration', 'void', ['string', 'boolean'], [fileName, omitOtherTags]);
+    }
+}
+Module['readTagConfiguration'] = readTagConfiguration;
+
+function setDefaultTagSize(defaultSize) {
+    Module.ccall('setDefaultTagSize', 'void', ['float'], [defaultSize]);
+}
+Module['setDefaultTagSize'] = setDefaultTagSize;
+
+//Set new camera calibration
+var cameraCalibrationFileNumber = 1;
+function readCalibration(file) {
+    var reader = new FileReader;
+    reader.readAsArrayBuffer(file);
+    reader.onload = function() {
+        var fileName = 'cameraConfiguration' + cameraCalibrationFileNumber;
+        var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
+        cameraCalibrationFileNumber++;
+        Module.ccall('readCalibration', 'void', ['string'], [fileName]);
+    }
+}
+Module['readCalibration'] = readCalibration;
+
+//Return projection matrix
+function getCameraMatrix() {
+    var buf = Module._malloc(4*9);
+    Module.ccall('getCameraMatrix', 'void', ['int'], [buf]);
+    var matrix = new Float32Array(9);
+    for(var i=0; i<matrix.length; i++){
+        matrix[i] = getValue(buf+4*i, "float");
+    }
+    Module._free(buf);
+    return matrix;
+}
+Module['getCameraMatrix'] = getCameraMatrix;
+
+//Return projection matrix
+function getDistortionCoeffs() {
+    var buf = Module._malloc(4*5);
+    var size = Module.ccall('getDistortionCoeffs', 'int', ['int'], [buf]);
+    var matrix = new Float32Array(size);
+    for(var i=0; i<matrix.length; i++){
+        matrix[i] = getValue(buf+4*i, "float");
+    }
+    Module._free(buf);
+    return matrix;
+}
+Module['getDistortionCoeffs'] = getDistortionCoeffs;
+
 this['Chilitags'] = Module;
