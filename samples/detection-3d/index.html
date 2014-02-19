@@ -164,6 +164,19 @@
  
     function renderLoop() {
 
+        //Work around Firefox's bug 879717
+        var videoIsReady = false;
+        while (!videoIsReady) {
+            try {
+                videoCtx.drawImage(video, 0, 0, width, height);
+                videoIsReady = true;
+            } catch (e) {
+                if (e.name.indexOf("NS_ERROR_NOT_AVAILABLE") == -1) throw e;
+                else console.log("try again");
+            }
+        }
+        videoTexture.needsUpdate = true;
+
         var obj = Chilitags.estimate(videoCanvas, rectify);
         for (key in objects) {
             //console.log(objects[key].children.length);
@@ -203,9 +216,6 @@
             objects[key].matrix.set.apply(objects[key].matrix, obj[key]);
         }
 
-        videoCtx.drawImage(video, 0, 0, width, height);
-        videoTexture.needsUpdate = true;
-
         renderer.autoClear = false;
         renderer.clear();
         renderer.render(videoScene, videoCamera);
@@ -226,8 +236,8 @@
             video.play();
             }, function() {alert('Failed to open video.')});
 
-    video.addEventListener('play', init, false);
-
+    //the timeOut is a work around Firefox's bug 879717
+    video.addEventListener('play', function() {setTimeout(init, 2500);}, false);
 	</script>
 	</body>
 </html>

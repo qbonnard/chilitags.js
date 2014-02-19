@@ -57,6 +57,7 @@
 
     var video = document.getElementById('inputVideo');
     var canvas = document.getElementById('chilitagsCanvas');
+    var canvasCtx = canvas.getContext('2d');
     var localMediaStream = null;
 
     var processingTime = document.createTextNode('');
@@ -65,7 +66,18 @@
 
     var updateChilitags = function() {
         if (localMediaStream) {
-            canvas.getContext('2d').drawImage(video, 0, 0, video.width, video.height);
+            //Work around Firefox's bug 879717
+            var videoIsReady = false;
+            while (!videoIsReady) {
+                try {
+                    canvasCtx.drawImage(video, 0, 0, video.width, video.height);
+                    videoIsReady = true;
+                } catch (e) {
+                    if (e.name.indexOf("NS_ERROR_NOT_AVAILABLE") == -1) throw e;
+                    else console.log("try again");
+                }
+            }
+            canvasCtx.drawImage(video, 0, 0, video.width, video.height);
             var start = new Date();
             var tags = Chilitags.find(canvas, drawBorders);
             var end = new Date();
@@ -123,7 +135,8 @@
                 video.play();
             },
             function(e) { console.log('Error in getUserMedia()', e); });
-        video.addEventListener('play', updateChilitags, false);
+        //the timeOut is a work around Firefox's bug 879717
+        video.addEventListener('play', function() {setTimeout(updateChilitags, 2500);}, false);
     }
     else alert("No getUserMedia");
 
