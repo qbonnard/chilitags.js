@@ -60,18 +60,21 @@
                    onChange="Chilitags.readTagConfiguration(this.files[0]);">
             </input>
         </div>
+        <script>
+            var defaultTagSize = 20;
+        </script>
         <div>
             Default TagSize:
             <input type="number"
                    value=20
                    min=0
-                   onChange="Chilitags.setDefaultTagSize(this.value);">
+                   onChange="defaultTagSize = this.value; Chilitags.setDefaultTagSize(defaultTagSize);">
             </input>
         </div>
         <div>
             Camera Calibration:
             <input type="file"
-                   onChange="Chilitags.readCalibration(this.files[0]);">
+                   onChange="Chilitags.readCalibration(this.files[0]); setCameraMatrix();">
             </input>
         </div>
         <script type="text/javascript">
@@ -104,10 +107,7 @@
     var width = videoCanvas.width;
     var height = videoCanvas.height;
 
-    function init() {
-		scene = new THREE.Scene();
-
-        camera = new THREE.Camera();
+    function setCameraMatrix() {
         var far = 1000;
         var near = 10;
         var m = Chilitags.getCameraMatrix();
@@ -117,6 +117,13 @@
                        0,              0, (far+near)/(far-near), -2*far*near/(far-near),
                        0,              0,                     1,  0
         );
+    }
+
+    function init() {
+		scene = new THREE.Scene();
+
+        camera = new THREE.Camera();
+        setCameraMatrix();
 		scene.add(camera);
 
         videoScene = new THREE.Scene();
@@ -147,11 +154,9 @@
             } catch( e ) { return false; } } )();
 
         if (hasWebGL) {
-            console.log("Using WebGL");
             renderer = new THREE.WebGLRenderer({antialias: true});
         }
         else {
-            console.log("Falling back to canvas rendering");
             renderer = new THREE.CanvasRenderer();
         }
 		renderer.setSize(width, height);
@@ -172,17 +177,13 @@
                 videoIsReady = true;
             } catch (e) {
                 if (e.name.indexOf("NS_ERROR_NOT_AVAILABLE") == -1) throw e;
-                else console.log("try again");
             }
         }
         videoTexture.needsUpdate = true;
 
         var obj = Chilitags.estimate(videoCanvas, rectify);
         for (key in objects) {
-            //console.log(objects[key].children.length);
             for (var i = 0; i < objects[key].children.length; i++) {
-                //console.log(i);
-                //console.log(objects[key]);
                 objects[key].children[i].visible = false;
             }
         }
@@ -191,25 +192,24 @@
                 var root = new THREE.Object3D();
                 root.matrixAutoUpdate = false;
 
-                var cube = new THREE.Mesh(new THREE.CubeGeometry(20, 20, 5));
-                cube.position.x = 10;
-                cube.position.y = 10;
+                var cube = new THREE.Mesh(new THREE.CubeGeometry(defaultTagSize, defaultTagSize, 2));
+                cube.position.x = defaultTagSize/2;
+                cube.position.y = defaultTagSize/2;
                 root.add(cube);
 
                 var id = new THREE.Mesh(
                     new THREE.TextGeometry(key, {font: 'helvetiker', size:10, height:2})
                 );
-                id.rotation.set(0,0,1.5);
+                id.rotation.set(0,0,0);
                 id.scale.set(1,-1,1);
-                id.position.z = -7;
+                id.position.y = -10;
+                id.position.z = -2;
                 root.add(id);
 
                 scene.add(root);
                 objects[key] = root;
             }
             for (var i = 0; i < objects[key].children.length; i++) {
-                //console.log(i);
-                //console.log(objects[key]);
                 objects[key].children[i].visible = true;
             }
             objects[key].updateMatrix();
