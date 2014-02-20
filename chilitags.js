@@ -7827,7 +7827,7 @@ function estimate (canvas, rectification) {
 Module['estimate'] = estimate;
 //Set marker configuration
 var tagConfigFileNumber = 1;
-function readTagConfiguration(file, omitOtherTags) {
+function readTagConfiguration(file, omitOtherTags, callback) {
     var reader = new FileReader;
     reader.readAsArrayBuffer(file);
     reader.onload = function() {
@@ -7835,6 +7835,7 @@ function readTagConfiguration(file, omitOtherTags) {
         var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
         tagConfigFileNumber++;
         Module.ccall('readTagConfiguration', 'void', ['string', 'boolean'], [fileName, omitOtherTags]);
+        callback();
     }
 }
 Module['readTagConfiguration'] = readTagConfiguration;
@@ -7844,7 +7845,7 @@ function setDefaultTagSize(defaultSize) {
 Module['setDefaultTagSize'] = setDefaultTagSize;
 //Set new camera calibration
 var cameraCalibrationFileNumber = 1;
-function readCalibration(file) {
+function readCalibration(file, callback) {
     var reader = new FileReader;
     reader.readAsArrayBuffer(file);
     reader.onload = function() {
@@ -7852,6 +7853,7 @@ function readCalibration(file) {
         var node = FS.createDataFile('/', fileName, new Uint8Array(reader.result), true, true);
         cameraCalibrationFileNumber++;
         Module.ccall('readCalibration', 'void', ['string'], [fileName]);
+        callback();
     }
 }
 Module['readCalibration'] = readCalibration;
