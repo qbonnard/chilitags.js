@@ -1,9 +1,0 @@
-{
-  "name": "chilitags",
-  "description": "CHILI-EPFL's JavaScript tools for augmented reality",
-  "homepage": "https://github.com/chili-epfl/chilitags.js",
-  "author": "CHILI Lab  (http://chili.epfl.ch/)",
-  "version": "0.1.0",
-  "git": "https://github.com/chili-epfl/chilitags.js.git",
-  "packages": {}
-}
