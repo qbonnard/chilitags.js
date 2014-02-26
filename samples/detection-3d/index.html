@@ -62,13 +62,24 @@
         </div>
         <script>
             var defaultTagSize = 20;
+            function updateDefaultSize() {
+                for (var o in objects) {
+                    // quick and dirty: assumes the cube is always
+                    // the second child
+                    objects[o].remove(objects[o].children[1]);
+                    var cube = new THREE.Mesh(new THREE.CubeGeometry(defaultTagSize, defaultTagSize, 2));
+                    cube.position.x = defaultTagSize/2;
+                    cube.position.y = defaultTagSize/2;
+                    objects[o].add(cube);
+                }
+            }
         </script>
         <div>
             Default TagSize:
             <input type="number"
                    value=20
                    min=0
-                   onChange="defaultTagSize = this.value; Chilitags.setDefaultTagSize(defaultTagSize);">
+                   onChange="defaultTagSize = this.value; Chilitags.setDefaultTagSize(defaultTagSize); updateDefaultSize();">
             </input>
         </div>
         <div>
@@ -192,11 +203,6 @@
                 var root = new THREE.Object3D();
                 root.matrixAutoUpdate = false;
 
-                var cube = new THREE.Mesh(new THREE.CubeGeometry(defaultTagSize, defaultTagSize, 2));
-                cube.position.x = defaultTagSize/2;
-                cube.position.y = defaultTagSize/2;
-                root.add(cube);
-
                 var id = new THREE.Mesh(
                     new THREE.TextGeometry(key, {font: 'helvetiker', size:10, height:2})
                 );
@@ -205,6 +211,12 @@
                 id.position.y = -10;
                 id.position.z = -2;
                 root.add(id);
+
+                // updateDefaultSize assumes the cube is the second child
+                var cube = new THREE.Mesh(new THREE.CubeGeometry(defaultTagSize, defaultTagSize, 2));
+                cube.position.x = defaultTagSize/2;
+                cube.position.y = defaultTagSize/2;
+                root.add(cube);
 
                 scene.add(root);
                 objects[key] = root;
