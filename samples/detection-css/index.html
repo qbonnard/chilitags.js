@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Chilitags + CSS3D</title>
+	<script src="../detection-3d/three.min.js"></script>
+	<script src="../../chilitags.js"></script>
+    <style>
+        #augmentation {
+            position: relative;
+            width: 640px;
+            height: 480px;
+        }
+        #reality, #camera {
+            position: absolute;
+            top:0px;
+            left:0px;
+            width: 640px;
+            height: 480px;
+        }
+
+        #reality {
+            z-index: -100;
+        }
+
+        .tag {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            margin-left: -25px;
+            margin-top: -25px;
+            background: rgba(255,0,255,.5);
+
+            transform-style: preserve-3d;
+        }
+
+        #camera {
+            transform-style: preserve-3d;
+        /*
+            camera.projectionMatrix.set(
+                2*m[0]/width,              0,        2*m[2]/width-1,  0,
+                           0, -2*m[4]/height,    -(2*m[5]/height-1),  0,
+                           0,              0, (far+near)/(far-near), -2*far*near/(far-near),
+                           0,              0,                     1,  0
+            );
+        */
+            transform: matrix3d(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                320, 240, 0, 1) ;
+        }
+
+    .hidden {
+      display: none;
+    }
+
+    </style>
+</head>
+
+<body>
+    <h1 class="title">Chilitags + CSS3D</h1>
+    <div id="augmentation">
+        <!-- <img id="reality" src="snapshot.jpg"></img> -->
+        <canvas id='videoCanvas' class='hidden' height='480' width='640'></canvas>
+        <video id='reality' autoplay='' class='' height='480' width='640'></video>
+
+        <div id="camera">
+        </div>
+    </div>
+    <script>
+
+    function updateTag(name, estimation) {
+        var t = new THREE.Matrix4();
+        t.set.apply(t, estimation);
+        var domObject = document.getElementById(name);
+        if (domObject === null) {
+            domObject = document.getElementById("camera").appendChild(document.createElement("div"));
+            domObject.id = name;
+            domObject.className = "tag";
+            var label = document.createElement("a");
+            label.text = name;
+            domObject.appendChild(label);
+        }
+        domObject.style['transform'] = "matrix3d(" 
+                + t.elements[0]  + ", " + t.elements[1]  + ", " +  t.elements[2]  + ", " + t.elements[3]  + ", " 
+                + t.elements[4]  + ", " + t.elements[5]  + ", " +  t.elements[6]  + ", " + t.elements[7]  + ", " 
+                + t.elements[8]  + ", " + t.elements[9]  + ", " +  t.elements[10] + ", " + t.elements[11] + ", " 
+                + t.elements[12] + ", " + t.elements[13] + ", " +  t.elements[14] + ", " + t.elements[15] + ")";
+    }
+
+    var video = document.getElementById('reality');
+    var videoCanvas = document.getElementById('videoCanvas');
+    var videoCtx = videoCanvas.getContext('2d');
+    var width = videoCanvas.width;
+    var height = videoCanvas.height;
+
+    Chilitags.setDefaultTagSize(50);
+
+    function renderLoop() {
+        requestAnimationFrame(renderLoop);
+        var videoIsReady = false;
+        while (!videoIsReady) {
+            try {
+                videoCtx.drawImage(video, 0, 0, width, height);
+                videoIsReady = true;
+            } catch (e) {
+                if (e.name.indexOf("NS_ERROR_NOT_AVAILABLE") == -1) throw e;
+            }
+        }
+
+        var estimations = Chilitags.estimate(videoCanvas, false);
+        for (var name in estimations) {
+            updateTag(name, estimations[name]);
+        }
+    }
+
+    window.URL = window.URL || window.webkitURL;
+    navigator.getUserMedia  = navigator.getUserMedia
+    || navigator.webkitGetUserMedia
+    || navigator.mozGetUserMedia
+    || navigator.msGetUserMedia;
+
+    navigator.getUserMedia({video: true}, function(stream) {
+            video.src = window.URL.createObjectURL(stream);
+            localMediaStream = stream;
+            video.play();
+            }, function() {alert('Failed to open video.')});
+
+    //the timeOut is a work around Firefox's bug 879717
+    video.addEventListener('play', function() {setTimeout(renderLoop, 2500);}, false);
+
+    //function estimate() {
+    //    return {tag_8: [
+    //        0.9763,-0.2161,-0.0072,29.8248,
+    //        0.1742,0.7664,0.6183,-87.8607,
+    //        -0.1281,-0.605,0.7859,528.798,
+    //        0,0,0,1
+    //        ]};
+    //}
+    //function getCameraMatrix() {
+    //        return [700, 0, 320, 0, 700, 240, 0, 0, 1];
+    //}
+
+    //var m = getCameraMatrix();
+    //var camera = new THREE.Camera();
+    //camera.projectionMatrix.set(
+    //    m[0], m[1], m[2],  0,
+    //    m[3], m[4], m[5],  0,
+    //    m[6], m[7], m[8],  0,
+    //       0,    0,    1,  0
+    //);
+
+    //var renderer = new THREE.WebGLRenderer();
+    //renderer.setSize(640, 480);
+    //var scene = new THREE.Scene();
+    //renderer.render(scene, camera);
+
+    //var str = ""
+    //for (var i = 0; i< 16; i++) str += (camera.matrixWorldInverse.elements[i]+", ");
+    //console.log(str);
+
+    </script>
+</body>
+</html>
+
