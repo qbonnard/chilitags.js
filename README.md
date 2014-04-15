@@ -67,17 +67,40 @@ $ em++ -std=c++11 -O2 -s OUTLINING_LIMIT=40000 ../src/jschilitags.cpp -lchilitag
 ```
 ##  API documentation
 
-### 2D detection
-#### Chilitags.findTagsOnImage(canvas, drawLine)
-* canvas: `object` (`<canvas>` element)
-* drawLine: `bool`
+chilitags.js' API mimics chilitags', with an occasionnal glue to make its use
+from javascript easier.
 
-Returns the object that includes pairs of tag ID and array of positions of its corners.
+chilitags.js lazily creates a Chilitags singleton and a Chilitags3D singleton.
+This short documentation is split into two parts, each describing functions
+related to either singleton.
+
+Samples are included in this repository, using each set of functionalities.
+
+### Chilitags (2D)
+
+#### Chilitags.setFilter(persistence, gain)
+
+Set parameters to paliate with the imperfections of the detection.
+
+* persistence: the number of frames in which a tag should be absent before
+  being removed from the output of find(). 0 means that tags disappear directly
+  if they are not detected.
+
+* gain: a value between 0 and 1 corresponding to the weight of the previous
+  (filtered) position in the new filtered position. 0 means that the latest
+  position of the tag is returned.
+
+#### Chilitags.find(canvas)
+
+Returns the detected tags, in the form of a mapping between their ids' and the
+position of their four corners.
+
+* canvas: a `<canvas>` element containing the image in which to detect tags.
 
 example:
 ```JavaScript
 var canvas = document.getElementById('image');
-var tags = Chilitags.findTagsOnImage(canvas, true);
+var tags = Chilitags.find(canvas);
 
 //tags -> {"tag ID": [[x0, y0],[x1, y1],[x2, y2],[x3, y3]], ...}
 for (var tagId in tags){
@@ -85,13 +108,64 @@ for (var tagId in tags){
 }
 ```
 
-demo: [https://chili-research.epfl.ch/chilitags.js/samples/detection-2d/](https://chili-research.epfl.ch/chilitags.js/samples/detection-2d/)
-### 3D detection
-#### Chilitags.get3dPose(canvas, rectification)
-* canvas: `object` (`<canvas>` element)
-* rectification: `bool`
+### Chilitags3D
 
-Returns the object that includes pairs of tag name and its transformation matrix.
+####Chilitags.set2DFilter(persistence, gain)
+
+Set parameters to paliate with the imperfections of the detection.
+
+Chilitags3D manages persistence separately from the 2D detection of Chilitags,
+because an object can be composed of several tags. If one or more of these tags
+are not detected, the pose of the object is estimated with the remaining,
+detected tags. In this case, it would hurt the pose estimation to make the
+individual tags persistent. Chilitags3D thus sets the 2D detection to have no
+persistence, and applies its persistence mechanism only after the estimation of
+the pose. The same goes for the position filtering. Note that for independent
+tags, it should not matter.
+
+This function sets the filter on the 2d detection underlying the 3d estimation.
+
+* persistence: the number of frames in which a tag should be absent before
+  being removed from the output of find(). 0 means that tags disappear directly
+  if they are not detected.
+
+* gain: a value between 0 and 1 corresponding to the weight of the previous
+  (filtered) position in the new filtered position. 0 means that the latest
+  position of the tag is returned.
+
+####Chilitags.set3DFilter(persistence, gain)
+
+Set parameters to paliate with the imperfections of the detection.
+
+Chilitags3D manages persistence separately from the 2D detection of Chilitags,
+because an object can be composed of several tags. If one or more of these tags
+are not detected, the pose of the object is estimated with the remaining,
+detected tags. In this case, it would hurt the pose estimation to make the
+individual tags persistent. Chilitags3D thus sets the 2D detection to have no
+persistence, and applies its persistence mechanism only after the estimation of
+the pose. The same goes for the position filtering. Note that for independent
+tags, it should not matter.
+
+This function sets the filter on the 3d estimation.
+
+* persistence: the number of frames in which a tag should be absent before
+  being removed from the output of find(). 0 means that tags disappear directly
+  if they are not detected.
+
+* gain: a value between 0 and 1 corresponding to the weight of the previous
+  (filtered) position in the new filtered position. 0 means that the latest
+  position of the tag is returned.
+
+####Chilitags.estimate(canvas, rectification)
+
+Returns a mapping of the detected objects to their transformation matrices.
+Transformation matrices are row-major and follow the standard convention to
+code the rotation and translation parameters in homogeneous coordinates:
+
+* canvas: a `<canvas>` element containing the image in which to detect tags.
+
+* rectification: a boolean specifying whether the input image should be
+  rectified according to the camera calibration.
 
 example:
 ```JavaScript
@@ -108,47 +182,73 @@ for (var tagId in tags){
     console.log(str);
 }
 ```
-demo:[https://chili-research.epfl.ch/chilitags.js/samples/detection-3d/](https://chili-research.epfl.ch/chilitags.js/samples/detection-3d/)
 
-#### Chilitags.getProjectionMatrix(width, height, near, far)
-* width: `float`
-* height: `float`
-* near: `float`
-* far: `float`
+####Chilitags.readTagConfiguration(file, omitOtherTags, callback)
 
-Returns `Float32Array` (16 elements) of projection matrix of camera.
+Chilitags3D can also detect rigid assemblies of tags. This allows for a more
+precise estimation of the object holding the tag, and for a graceful
+degradation of the estimation, should some of the tag be misdetected or
+occluded.
 
-example:
-```JavaScript
-var projectionMatrix = Chilitags.getProjectionMatrix(960, 640, 1, 100);
-```
+* file: The name of the YAML configuration file describing rigid clusters of
+  tags. The library is distributed with a sample configuration file documenting
+  the expected format. (e.g.
+  [chilitags/share/markers_configuration_sample.yml](https://github.com/chili-epfl/chilitags/blob/master/share/markers_configuration_sample.yml))
 
-### Camera calibration
-#### Chilitags.setNewCamera(file)
-* file: XML/YAML file in OpenCV format(See [Camera calibration With OpenCV](http://docs.opencv.org/doc/tutorials/calib3d/camera_calibration/camera_calibration.html))
+* omitOtherTags: If true, ignore the tags that are not explicitly listed in the
+  configuration file. If false (default), Chilitags3D::estimate() estimates the
+  3D pose of all the detected tags. You can set the size of tags not described
+  in the configuration file with setDefaultTagSize(). 
 
-Set intrinsic parameters and distortion coefficients of camera.
-
-example:
-```JavaScript
-var file = document.getElementById('calibrationFile');
-file.addEventListener('change', function(e) {
-    Chilitags.setNewCamera(e.target.files[0]);
-}, false);
-```
-
-### Marker configuration
-#### Chilitags.setMarkerConfig(file)
-* file: YAML file (e.g. [chilitags/share/markers_configuration_sample.yml](https://github.com/chili-epfl/chilitags/blob/master/share/markers_configuration_sample.yml))
-
-Set marker configuration.
+* callback: the call is actually asynchronous, so this parameter allows to
+  specify a function to call back when the configuration is loaded.
 
 example:
 ```JavaScript
 var file = document.getElementById('markerConfigFile');
 file.addEventListener('change', function(e) {
-    Chilitags.setMarkerConfig(e.target.files[0]);
+    Chilitags.readTagConfiguration(e.target.files[0]);
 }, false);
 ```
 
+####Chilitags.setDefaultTagSize(defaultSize)
 
+Sets the default size of tags (used to compute their 3D pose) when not
+explicitly specified with read3DConfiguration(). To be accurate, the unit must
+match the unit used for the camera calibration (usually, millimetres).
+
+Note that is assumes all the tags have the same size. If tags have different
+size, you may want to list them in the configuration file (see
+read3DConfiguration()).
+
+The default value of the default tag size is 20 millimetres.
+
+####Chilitags.readCalibration(file, callback)
+
+For accurate results, Chilitags3D can be provided the calibration data of the
+camera detecting the chilitags.  See
+https://docs.opencv.org/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
+for background on this topic.
+
+Note that this method can be called as often as needed with a new calibration
+configuration (for instance if the user switched to another camera).
+
+* file: XML/YAML file in OpenCV format(See [Camera calibration With
+  OpenCV](http://docs.opencv.org/doc/tutorials/calib3d/camera_calibration/camera_calibration.html))
+
+* callback: the call is actually asynchronous, so this parameter allows to
+  specify a function to call back when the configuration is loaded.
+
+example:
+```JavaScript
+var file = document.getElementById('calibrationFile');
+file.addEventListener('change', function(e) {
+    Chilitags.readCalibration(e.target.files[0]);
+});
+```
+
+####Chilitags.getCameraMatrix()
+Get the intrinsic parameters of the camera as an array.
+
+####Chilitags.getDistortionCoeffs()
+Get the distortion coefficients of the camera as an array.
